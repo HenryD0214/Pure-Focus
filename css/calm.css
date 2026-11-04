@@ -1,0 +1,296 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   calm.css — the Focus page's calm pass (round 4). Loads last.
+   Fewer outlines and boxes, quieter small controls, the add-task options
+   only while you add a task, light task rows that reorder by dragging.
+   Remove the <link> in app.html to go back to the previous look.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── timer panel: the mode switch, ring, controls and Background · Music sit on one rounded
+   glass panel, like the live demo on the homepage — 28 % opaque (mostly see-through). In the
+   declutter views (timer + tasks, timer only) it fades to a light veil so the scene comes forward. ── */
+#view-focus .timer-card {
+  --panel-a: .28;
+  position: relative;
+  isolation: isolate;
+  padding: 22px 24px 22px;
+  border-radius: 28px;
+  background-color: rgba(20, 20, 25, var(--panel-a));
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255, 255, 255, .06);
+  -webkit-backdrop-filter: blur(28px) saturate(150%); backdrop-filter: blur(28px) saturate(150%);
+  /* only properties and durations here, so the declutter fade keeps its own delays */
+  transition-property: opacity, visibility, background-color, box-shadow, border-color;
+  transition-duration: var(--dur-smooth, .4s), 0s, var(--dur-smooth, .4s), var(--dur-smooth, .4s), var(--dur-smooth, .4s);
+}
+#view-focus .timer-card::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .07), transparent 32%);
+  pointer-events: none;
+  transition: opacity var(--dur-smooth, .4s);
+}
+:root[data-theme="light"] #view-focus .timer-card {
+  background-color: rgba(255, 255, 255, var(--panel-a));
+  border-color: rgba(11, 11, 11, .08);
+}
+:root[data-theme="light"] #view-focus .timer-card::before { background: linear-gradient(180deg, rgba(255, 255, 255, .6), transparent 32%); }
+/* declutter 1 (timer + tasks) and 2 (timer only): a faint veil, barely blurred */
+:root[data-declutter="1"] #view-focus .timer-card,
+:root[data-declutter="2"] #view-focus .timer-card {
+  --panel-a: .1;
+  border-color: rgba(255, 255, 255, .08);
+  box-shadow: none;
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+/* …so Reset / Skip carry their own dark glass there, and stay findable over a bright scene */
+:root:not([data-theme="light"])[data-declutter="1"] #view-focus .btn-transport,
+:root:not([data-theme="light"])[data-declutter="2"] #view-focus .btn-transport {
+  background: rgba(12, 12, 15, .45); border-color: rgba(255, 255, 255, .18);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+}
+:root[data-theme="light"][data-declutter="1"] #view-focus .btn-transport,
+:root[data-theme="light"][data-declutter="2"] #view-focus .btn-transport { background: rgba(255, 255, 255, .7); }
+:root[data-declutter="1"] #view-focus .timer-card::before,
+:root[data-declutter="2"] #view-focus .timer-card::before { opacity: 0; }
+@media (max-width: 460px) {
+  #view-focus .timer-card { padding: 18px 14px 18px; border-radius: 24px; }
+}
+
+/* Reset / Skip: round outlined buttons either side of Start (icon only — the tooltip names them) */
+#view-focus .btn-transport {
+  width: 44px; height: 44px; padding: 0;
+  border-radius: 50%;
+  color: var(--text-primary);
+  border-color: var(--hairline-strong, rgba(255, 255, 255, .16));
+  background: rgba(255, 255, 255, .07);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+  transition: background var(--dur-quick, .16s), transform .14s;
+}
+#view-focus .btn-transport svg { width: 18px; height: 18px; }
+#view-focus .btn-transport:hover,
+#view-focus .btn-transport:focus-visible { background: rgba(255, 255, 255, .14); }
+:root[data-theme="light"] #view-focus .btn-transport { background: rgba(11, 11, 11, .04); border-color: rgba(11, 11, 11, .12); }
+:root[data-theme="light"] #view-focus .btn-transport:hover { background: rgba(11, 11, 11, .08); }
+#view-focus .transport { gap: 16px; }
+#view-focus .kbd-hint { display: none; }
+
+/* the task line in the ring nods when you pick a task from the list */
+#ring-task.is-pulse { animation: calm-ring-pulse .7s cubic-bezier(.2, .8, .2, 1); }
+@keyframes calm-ring-pulse {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.07); color: var(--accent-text, var(--accent)); }
+  100% { transform: scale(1); }
+}
+
+/* ── the music bar under the timer panel: art · title / artist · station | ▶ | ⏭ (js/player.js).
+   A glass capsule; over a video scene it is Liquid Glass (css/glass.css). ── */
+#view-focus .timer-card > .timer-footer { margin-top: 8px; }
+/* the timer panel is the backing over a video scene, so the caption needs no bed of its own */
+body.has-scene #view-focus .timer-card .timer-footer {
+  padding: 0; background: none; -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+#view-focus .stage-dock { margin: 0; }
+#view-focus .pf-dock { width: 100%; gap: 8px; }
+#view-focus .pf-np {
+  --panel-a: .22;
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  height: 64px;
+  gap: 4px;
+  padding: 0 10px 0 10px;
+  border-radius: 32px;
+  border: 1px solid var(--hairline);
+  background: rgba(20, 20, 25, .34);
+  box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255, 255, 255, .06);
+  -webkit-backdrop-filter: blur(28px) saturate(150%); backdrop-filter: blur(28px) saturate(150%);
+}
+:root[data-theme="light"] #view-focus .pf-np { background: rgba(255, 255, 255, .5); border-color: rgba(255, 255, 255, .75); }
+#view-focus .pf-np-main {
+  flex: 1; min-width: 0; height: 52px;
+  gap: 12px; padding: 0 8px 0 0;
+  border-radius: 26px;
+  font-size: 14px; white-space: normal; text-align: left;
+}
+#view-focus .pf-np-main:hover, #view-focus .pf-np-main[aria-expanded="true"] { background: transparent; }
+#view-focus .pf-np-main:hover .pf-l1 { text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); text-underline-offset: 3px; }
+#view-focus .pf-art--np { width: 44px; height: 44px; border-radius: 13px; margin-left: 0; }
+#view-focus .pf-np-text { height: 40px; }
+#view-focus .pf-np .pf-l1 { font-size: 14.5px; font-weight: 650; letter-spacing: -0.01em; color: var(--text-primary); }
+#view-focus .pf-np .pf-l2 { font-size: 12.5px; font-weight: 500; color: var(--text-secondary); margin-top: 1px; }
+/* music off: a soft tile with a note in the theme's colour instead of the equaliser */
+.pf-np-note { display: none; position: absolute; inset: 0; margin: auto; width: 20px; height: 20px; }
+#view-focus .pf-np.is-off .pf-art { background: color-mix(in srgb, var(--accent) 22%, rgba(255, 255, 255, .06)); color: var(--accent-text, var(--accent)); }
+#view-focus .pf-np.is-off .pf-np-note { display: block; }
+#view-focus .pf-np.is-off .pf-eq { display: none; }
+/* ▶ is the bar's one filled control; ⏭ is plain */
+#view-focus .pf-np-pp {
+  width: 44px; height: 44px; padding: 0; flex: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18);
+  transition: background var(--dur-quick, .16s), transform .14s;
+}
+#view-focus .pf-np-pp:hover { background: rgba(255, 255, 255, .22); }
+#view-focus .pf-np-pp:active { transform: scale(.94); }
+#view-focus .pf-np-pp svg { width: 18px; height: 18px; }
+#view-focus .pf-np-pp .pf-i-play { transform: translateX(1px); }
+:root[data-theme="light"] #view-focus .pf-np-pp { background: rgba(255, 255, 255, .9); box-shadow: 0 1px 2px rgba(17, 17, 24, .08), 0 0 0 .5px rgba(17, 17, 24, .08); }
+:root[data-theme="light"] #view-focus .pf-np-pp:hover { background: #fff; }
+#view-focus .pf-np-next { --pf-size: 40px; color: var(--text-primary); }
+#view-focus .pf-np-next svg { width: 18px; height: 18px; }
+#view-focus .pf-np-next:disabled { opacity: .35; }
+#view-focus .pf-np-progress { left: 30px; right: 30px; bottom: -1px; }
+#view-focus .pf-dock-msg { margin-top: 2px; }
+
+/* ── tasks card: the streak and Focus Guard chips sit beside the "Today's Tasks" title ── */
+.tk-card > .card-header { flex-wrap: wrap; row-gap: 8px; }
+.tasks-head-chips { border-bottom: 0; padding: 0; margin: 0 0 0 2px; gap: 6px; flex-wrap: nowrap; min-width: 0; }
+.tasks-head-chips .pf-hud {
+  height: 28px; padding: 0 10px 0 9px; gap: 6px;
+  background: transparent;
+  border-color: var(--hairline);
+  box-shadow: none;
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+  font-size: 12px;
+}
+/* only the streak here — level and today's goal are one click away in the popover */
+.tasks-head-chips .pf-hud-sep, .tasks-head-chips .pf-hud-level, .tasks-head-chips .pf-hud--chip .pf-hud-goal { display: none; }
+.tasks-head-chips .pf-hud .pf-hud-lbl { color: var(--text-secondary); font-weight: 560; }
+.tasks-head-chips .pf-hud:hover .pf-hud-lbl { color: var(--text-primary); }
+.tasks-head-chips .pf-hud-flame { width: 14px; height: 14px; }
+.tasks-head-chips .guard-chip { height: 28px; border-radius: 14px; font-size: 12px; font-weight: 560; padding: 0 10px 0 8px; gap: 5px; }
+.tasks-head-chips .guard-chip svg { width: 14px; height: 14px; }
+/* narrow cards: title · count, the estimate just under it, then the chips on their own row */
+@container tasks (max-width: 560px) {
+  .tasks-head-chips { order: 11; flex-basis: 100%; margin: 6px 0 0; }
+}
+/* the progress popover drops below the chip, from its left edge (phones keep the bottom sheet) */
+@media (min-width: 701px) {
+  .tasks-head-chips .pf-hud-wrap--stage .pf-hud-pop {
+    top: calc(100% + 8px); bottom: auto; left: 0; right: auto;
+    transform: none; transform-origin: top left; animation: pf-pop-in .16s cubic-bezier(.16, 1, .3, 1);
+  }
+}
+
+/* header: title · count … estimate (Templates moved into the add field) */
+.tk-card > .card-header { margin-bottom: 12px; }
+.tk-card #tasks-estimate { font-size: 12px; color: var(--text-muted); }
+
+/* ── add a task: a plain field; Due date · Estimate · Templates · Add appear while you type ── */
+.tk-add {
+  padding: 4px 4px 4px 6px;
+  margin-bottom: 10px;
+  border-radius: 14px;
+  border-color: transparent;
+  background: var(--fill-inset, rgba(255, 255, 255, .05));
+  transition: border-color var(--dur-quick, .16s), background var(--dur-quick, .16s);
+}
+.tk-add:focus-within, .tk-add.is-open { border-color: color-mix(in srgb, var(--accent) 45%, transparent); background: rgba(255, 255, 255, .05); }
+:root[data-theme="light"] .tk-add { background: rgba(11, 11, 11, .035); }
+:root[data-theme="light"] .tk-add:focus-within, :root[data-theme="light"] .tk-add.is-open { background: rgba(255, 255, 255, .85); }
+.tk-add .add-task-input { height: 36px; font-size: 14px; padding-left: 30px;
+  background: no-repeat 8px 50% / 16px 16px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 4.5v11M4.5 10h11' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E"); }
+:root[data-theme="light"] .tk-add .add-task-input { background: no-repeat 8px 50% / 16px 16px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 4.5v11M4.5 10h11' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E"); }
+.tk-add-chips, .tk-add .tk-add-btn {
+  max-width: 0;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  /* closing waits a beat so a click on a chip still lands as the field loses focus */
+  transition: max-width .26s cubic-bezier(.2, .8, .2, 1) .18s, max-height .26s ease .18s, opacity .16s ease .18s;
+}
+.tk-add .tk-add-btn { min-width: 0; padding: 0; }
+.tk-add:is(:focus-within, .is-open, :has([aria-expanded="true"])) .tk-add-chips {
+  max-width: 560px; max-height: 120px; opacity: 1; pointer-events: auto; overflow: visible;
+  transition: max-width .26s cubic-bezier(.2, .8, .2, 1), max-height .26s ease, opacity .16s ease;
+}
+.tk-add:is(:focus-within, .is-open, :has([aria-expanded="true"])) .tk-add-btn {
+  max-width: 120px; max-height: 80px; opacity: 1; pointer-events: auto; min-width: 58px; padding: 0 14px;
+  transition: max-width .26s cubic-bezier(.2, .8, .2, 1), max-height .26s ease, opacity .16s ease;
+}
+.tk-add .tk-chip { height: 28px; }
+.tk-add .tk-add-tpl { padding: 0 10px; color: var(--text-muted); background: transparent; border-color: var(--hairline); }
+.tk-add .tk-add-tpl:hover, .tk-add .tk-add-tpl[aria-expanded="true"] { color: var(--text-primary); background: var(--fill-inset); }
+.tk-card .templates { margin: 0 0 10px; }
+@container tasks (max-width: 560px) {
+  /* phones and the side panel: the options take their own line under the field only while it's open */
+  .tk-add { row-gap: 0; }
+  .tk-add:is(:focus-within, .is-open, :has([aria-expanded="true"])) { row-gap: 8px; padding-bottom: 6px; }
+}
+
+/* ── task rows: light lines instead of boxes; the row you're focusing on is tinted ── */
+.tk-card .tk-list { gap: 2px; }
+.tk-row.task-row {
+  min-height: 46px;
+  padding: 6px 6px 6px 2px;
+  border-radius: 12px;
+  background: transparent;
+  border-color: transparent;
+  transition: background .16s, border-color .16s, box-shadow .2s, transform .2s cubic-bezier(.2, .8, .2, 1);
+}
+:root[data-theme="light"] .tk-row.task-row { background: transparent; }
+.tk-row.task-row:hover { background: rgba(255, 255, 255, .045); border-color: transparent; }
+:root[data-theme="light"] .tk-row.task-row:hover { background: rgba(11, 11, 11, .035); }
+.tk-row.task-row.is-active {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+.tk-row.task-row::before { top: 12px; bottom: 12px; }
+/* hairline between rows (not around the tinted one) */
+.tk-list > .tk-row + .tk-row::after {
+  content: ""; position: absolute; left: 44px; right: 10px; top: -2px; height: 1px;
+  background: var(--hairline); opacity: .6; pointer-events: none;
+}
+.tk-list > .tk-row.is-active::after, .tk-list > .tk-row.is-active + .tk-row::after,
+.tk-list > .tk-row:hover::after, .tk-list > .tk-row:hover + .tk-row::after,
+.tk-list.is-reordering > .tk-row::after { opacity: 0; }
+
+.tk-row .tk-main { padding-top: 5px; }
+.tk-row .tk-line1 { column-gap: 8px; }
+.tk-title.task-title { font-size: 14px; font-weight: 560; }
+.tk-row.is-sortable, .tk-row.is-sortable .tk-title.task-title { cursor: pointer; }
+.tk-row.is-sortable { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.tk-title.task-title:hover { background: transparent; }
+.tk-row.is-active .tk-title.task-title { color: var(--text-primary); }
+
+/* pomodoro progress rides at the end of the title line: "◷ 1/3" */
+.tk-pomos {
+  display: inline-flex; align-items: center; gap: 3px; flex: none;
+  font-size: 11.5px; font-weight: 560; color: var(--text-muted); font-variant-numeric: tabular-nums;
+}
+.tk-pomos .tk-ic, .tk-pomos .tk-ic svg { width: 13px; height: 13px; }
+.tk-pomos.has-progress { color: var(--accent-text, var(--accent)); }
+
+/* chips: quieter until the row is hovered (the overdue / live ones keep their colour) */
+.tk-row .tk-chip:not(.is-overdue):not(.is-today):not(.is-live) { background: transparent; border-color: var(--hairline); color: var(--text-muted); }
+.tk-row:hover .tk-chip:not(.is-overdue):not(.is-today):not(.is-live) { color: var(--text-secondary); }
+
+/* grip: a hint on hover; the whole row is the handle */
+.tk-row .tk-grip { opacity: 0; transition: opacity .16s; cursor: grab; }
+.tk-row.is-sortable:hover .tk-grip { opacity: .45; }
+
+/* ── dragging ── */
+.tk-list.is-reordering > .tk-row { transition: transform .2s cubic-bezier(.2, .8, .2, 1), background .16s; }
+.tk-list.is-reordering > .tk-row.is-lifted {
+  z-index: 6;
+  transition: box-shadow .16s, background .16s;
+  background: color-mix(in srgb, var(--surface-1, #1b1b1f) 92%, var(--accent));
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, .55), 0 0 0 1px rgba(255, 255, 255, .04);
+  cursor: grabbing;
+}
+:root[data-theme="light"] .tk-list.is-reordering > .tk-row.is-lifted { background: #fff; box-shadow: 0 14px 30px -12px rgba(0, 0, 0, .25), 0 0 0 1px rgba(11, 11, 11, .05); }
+.tk-list.is-reordering > .tk-row.is-lifted .tk-grip { opacity: .8; }
+.tk-list.is-reordering > .tk-row.is-lifted .tk-actions { opacity: 0; }
+.tk-row.is-armed { background: var(--fill-inset, rgba(255, 255, 255, .07)); transform: scale(.985); }
+.tk-row.is-dropping { z-index: 5; }
+body.tk-reordering, body.tk-reordering * { cursor: grabbing !important; }
+body.tk-reordering { -webkit-user-select: none; user-select: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  #ring-task.is-pulse { animation: none; }
+  .tk-list.is-reordering > .tk-row, .tk-row.task-row { transition: none; }
+}
+body.reduce-motion #ring-task.is-pulse { animation: none; }
+

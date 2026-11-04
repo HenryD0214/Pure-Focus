@@ -1,0 +1,35 @@
+:root { --accent: #FF6B35; --focus: #E8482B; color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  min-height: 100vh; display: grid; place-items: center; padding: 32px 16px;
+  background: radial-gradient(60vmax 50vmax at 15% 10%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 70%),
+              radial-gradient(60vmax 50vmax at 85% 90%, color-mix(in srgb, var(--focus) 14%, transparent), transparent 70%), #0b0b0d;
+  color: #fff; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.col { width: min(440px, 100vw - 32px); display: flex; flex-direction: column; align-items: center; text-align: center; }
+.ring { position: relative; width: 120px; height: 120px; }
+.ring svg { width: 120px; height: 120px; transform: rotate(-90deg); }
+.ring circle { fill: none; stroke-width: 6; }
+.track { stroke: rgba(255, 255, 255, .12); }
+.arc { stroke: var(--focus); stroke-linecap: round; stroke-dasharray: 339.3; stroke-dashoffset: 0; }
+.time { position: absolute; inset: 0; display: grid; place-items: center; font-size: 28px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+h1 { margin: 24px 0 8px; font-size: 28px; font-weight: 700; letter-spacing: -0.02em; overflow-wrap: anywhere; }
+.body { margin: 0; color: rgba(255, 255, 255, .78); }
+.primary {
+  margin-top: 28px; height: 44px; padding: 0 28px; border: 0; border-radius: 22px; background: var(--focus); color: #fff;
+  font: inherit; font-weight: 600; cursor: pointer;
+}
+.primary:focus-visible, .hold:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.pass { margin-top: 12px; display: flex; flex-direction: column; align-items: center; }
+.hold {
+  display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border: 0; border-radius: 18px;
+  background: transparent; color: rgba(255, 255, 255, .86); font: inherit; font-size: 14px; cursor: pointer; user-select: none; -webkit-user-select: none;
+}
+.hold:hover { background: rgba(255, 255, 255, .06); }
+.hold-ring { width: 18px; height: 18px; transform: rotate(-90deg); }
+.hold-ring circle { fill: none; stroke-width: 2.5; stroke: rgba(255, 255, 255, .25); }
+.hold-ring .fill { stroke: #fff; stroke-dasharray: 56.55; stroke-dashoffset: 56.55; stroke-linecap: round; }
+.caption { margin: 4px 0 0; font-size: 12px; color: rgba(255, 255, 255, .62); }
+footer { margin-top: 40px; font-size: 12px; color: rgba(255, 255, 255, .56); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }

@@ -1,0 +1,14 @@
+Pure Focus — alarm sounds (assets/sounds/alarm_*.wav)
+All six are CC0 1.0 (public domain dedication, https://creativecommons.org/publicdomain/zero/1.0/):
+free to use in apps and websites, commercial or not, no attribution required — credited here anyway.
+Source: Freesound (freesound.org). Trimmed (natural fade-out), mono 44.1 kHz, loudness-normalised to
+−16 LUFS integrated (measured as dual-mono, ITU-R BS.1770), true peak ≤ −1 dBTP. Downloaded 2026-10-21.
+
+  alarm_bowl.wav     "Tibetan bowl_center hit.wav"        by dersinnsspace  https://freesound.org/s/421829/
+  alarm_bell.wav     "Bell at Daitokuji temple, Kyoto"    by nahmandub      https://freesound.org/s/131348/
+  alarm_marimba.wav  "Magic mallet.wav"                   by Hotlavaman     https://freesound.org/s/349201/
+  alarm_chime.wav    "Wind Chime (G-003)"                 by GnoteSoundz    https://freesound.org/s/169855/
+  alarm_soft.wav     "1ring"                              by iluppai        https://freesound.org/s/148849/
+  alarm_digital.wav  "Ping 1"                             by SpiceProgram   https://freesound.org/s/387217/
+
+Alarm ids (bowl, bell, marimba, chime, soft, digital) are unchanged, so saved settings keep working.

@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pure Focus — Pomodoro Timer</title>
+<meta name="pure-focus-app" content="1">
+<meta name="description" content="Pure Focus is a Pomodoro timer with a task list, focus reports, ambient soundscapes and background music.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='11' fill='none' stroke='%23e8482b' stroke-width='4' stroke-linecap='round' stroke-dasharray='50 20' transform='rotate(-90 16 16)'/%3E%3C/svg%3E">
+<script>/* A file of the app's own that fails to load would quietly break whatever needs it: reload once to get it (not again within 30 s). */
+addEventListener('error',function(e){var t=e.target;if(!t||t.tagName!=='SCRIPT'||!t.src||t.src.indexOf(location.origin)!==0)return;try{var n=Date.now(),l=+sessionStorage.getItem('pf.reloadedForScript')||0;if(n-l<30000)return;sessionStorage.setItem('pf.reloadedForScript',String(n));location.reload();}catch(_){}},true);</script>
+<script>/* Early paint (v2-themes §8.1.3): theme + scheme before the CSS paints. Settings.applyTheme() corrects it on init. */
+try{var d=JSON.parse(localStorage.getItem('purefocus.v1')||'{}').settings||{};var r=document.documentElement;r.dataset.pfTheme=d.themeID||'ember';var s=d.colorScheme||'dark';if(s==='system')s=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';r.dataset.theme=s;r.dataset.schemePref=s;r.dataset.view='focus';var t=localStorage.getItem('purefocus.ui.sceneTone'),hv=(location.hash||'').slice(1);if(t)r.dataset.sceneTone=t;if(s==='light'&&t==='dark'&&(!hv||hv==='focus')){r.dataset.theme='dark';r.classList.add('scene-adapt');}if(localStorage.getItem('purefocus.ui.sidebar')==='collapsed')r.classList.add('sb-collapsed');if(localStorage.getItem('purefocus.ui.tasksPanel')==='collapsed')r.classList.add('tasks-collapsed');}catch(e){document.documentElement.dataset.pfTheme='ember';}</script>
+<script>/* Accounts are required: keep the app hidden until the gate has checked for a session. */
+document.documentElement.classList.add('auth-locked');</script>
+<link rel="stylesheet" href="css/auth-gate.css?v=10311800">
+<link rel="stylesheet" href="css/pro-modal.css?v=10318000">
+<link rel="stylesheet" href="css/themes.css?v=10211152">
+<link rel="stylesheet" href="styles.css?v=11041001">
+<link rel="stylesheet" href="css/tasks.css?v=11041001">
+<link rel="stylesheet" href="css/scenes.css?v=10211240">
+<link rel="stylesheet" href="css/rewards.css?v=10302145">
+<link rel="stylesheet" href="css/calendar.css?v=10302145">
+<link rel="stylesheet" href="css/account.css?v=10211152">
+<link rel="stylesheet" href="css/friends.css?v=10211152">
+<link rel="stylesheet" href="css/coach.css?v=10302145">
+<link rel="stylesheet" href="css/guard.css?v=11041001">
+<link rel="stylesheet" href="css/insights.css?v=10302145">
+<link rel="stylesheet" href="css/player.css?v=10302145">
+<link rel="stylesheet" href="css/calm.css?v=10302145">
+<link rel="stylesheet" href="css/shell.css?v=10302216">
+<link rel="stylesheet" href="css/light.css?v=10271510">
+<link rel="stylesheet" href="css/glass.css?v=10271710">
+</head>
+<body data-palette="#3987e5,#d95926,#199e70,#c98500,#d55181,#008300,#9085e9,#e66767">
+
+<!-- ─────────────────────────  SIGN-IN GATE (required account, js/auth-gate.js)  ─────────────────────────
+     A modal <dialog> in the top layer. The app is inert and hidden until a session exists. -->
+<dialog id="auth-gate" aria-labelledby="auth-title" aria-describedby="auth-lead">
+  <div class="auth-shell">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <svg viewBox="0 0 32 32" aria-hidden="true">
+          <circle cx="16" cy="16" r="11" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"
+                  stroke-dasharray="52 17" transform="rotate(-90 16 16)"/>
+          <circle cx="6" cy="15.8" r="2.4" fill="currentColor"/>
+        </svg>
+        <span>Pure Focus</span>
+      </div>
+
+      <div class="auth-checking" id="auth-checking">
+        <span class="auth-spinner" aria-hidden="true"></span>
+        <p id="auth-checking-text">Checking your session…</p>
+        <button class="auth-link" id="auth-retry" type="button" hidden>Try again</button>
+      </div>
+
+      <div id="auth-ready" hidden>
+        <p class="auth-eyebrow" id="auth-eyebrow">Welcome back</p>
+        <h1 class="auth-title" id="auth-title">Sign in to focus.</h1>
+        <p class="auth-lead" id="auth-lead">Your timer, tasks and sessions, synced across your devices.</p>
+
+        <button class="auth-google" id="auth-google" type="button">
+          <svg viewBox="0 0 18 18" aria-hidden="true">
+            <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62Z"/>
+            <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18Z"/>
+            <path fill="#FBBC05" d="M3.97 10.72a5.4 5.4 0 0 1 0-3.44V4.95H.96a9 9 0 0 0 0 8.1l3.01-2.33Z"/>
+            <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58Z"/>
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+
+        <div class="auth-divider"><span>or use email</span></div>
+
+        <form class="auth-form" id="auth-form" novalidate>
+          <label class="auth-field">
+            <span>Email</span>
+            <input id="auth-email" type="email" name="email" autocomplete="email" inputmode="email"
+                   spellcheck="false" autocapitalize="off" placeholder="you@example.com" required>
+          </label>
+          <label class="auth-field" id="auth-name-field" hidden>
+            <span>Name</span>
+            <input id="auth-name" type="text" name="name" autocomplete="name" maxlength="32" placeholder="Your name">
+          </label>
+          <label class="auth-field">
+            <span>Password</span>
+            <input id="auth-password" type="password" name="password" autocomplete="current-password"
+                   placeholder="Your password" required minlength="8">
+          </label>
+          <div class="auth-row">
+            <label class="auth-check"><input id="auth-remember" type="checkbox" checked> Keep me signed in</label>
+            <button class="auth-link" id="auth-forgot" type="button">Forgot password?</button>
+          </div>
+          <button class="btn btn-primary auth-submit" id="auth-submit" type="submit">Sign in</button>
+        </form>
+
+        <p class="auth-status" id="auth-status" role="status" aria-live="polite"></p>
+
+        <p class="auth-switch-line">
+          <span id="auth-switch-copy">New to Pure Focus?</span>
+          <button class="auth-switch" id="auth-switch" type="button">Create an account</button>
+        </p>
+      </div>
+
+      <p class="auth-note">
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <rect x="4.2" y="8.6" width="11.6" height="8" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M7 8.6V6.4a3 3 0 0 1 6 0v2.2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <span>Private to your account. Only you can see your tasks, sessions and settings.</span>
+      </p>
+    </div>
+  </div>
+</dialog>
+
+<!-- ─────────────────────────  SCENE (background video, owned by js/scenes.js)  ───────────────────────── -->
+<div id="scene-root" aria-hidden="true"></div>
+
+<!-- ─────────────────────────  AURORA BACKDROP  ───────────────────────── -->
+<div class="aurora" aria-hidden="true">
+  <span class="blob blob-1"></span>
+  <span class="blob blob-2"></span>
+  <span class="blob blob-3"></span>
+  <span class="aurora-scrim"></span>
+</div>
+
+<!-- ─────────────────────────  SIDEBAR (js/shell.js)  ─────────────────────────
+     Sections at the top; today's goal, Settings and the account at the bottom. It folds away
+     with its toggle (remembered); on phones it is a drawer. -->
+<aside class="sidebar" id="sidebar" aria-label="Pure Focus">
+  <div class="sb-head">
+    <a class="brand" href="index.html" title="Pure Focus home" aria-label="Pure Focus home">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="11" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"
+                stroke-dasharray="52 17" transform="rotate(-90 16 16)"/>
+      </svg>
+      <span class="brand-name">Pure&nbsp;Focus</span>
+    </a>
+    <button class="sb-toggle" id="sb-collapse" type="button" title="Hide the sidebar" aria-label="Hide the sidebar" aria-controls="sidebar" aria-expanded="true">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.6" y="3.6" width="14.8" height="12.8" rx="3.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M7.8 3.8v12.4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4.6 6.8h1.4M4.6 9.2h1.4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+
+  <nav class="sb-nav" aria-label="Sections">
+    <button class="tab sb-item is-active" type="button" data-view="focus" aria-current="page">
+      <svg class="sb-ic" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="11" r="6.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 8v3l2 1.4M8.2 2.8h3.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Focus</span>
+    </button>
+    <button class="tab sb-item" type="button" data-view="calendar">
+      <svg class="sb-ic" viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4.2" width="14" height="12.6" rx="2.8" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3.2 8.2h13.6M6.8 2.6v3M13.2 2.6v3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="7" cy="11.6" r=".9" fill="currentColor"/><circle cx="10" cy="11.6" r=".9" fill="currentColor"/><circle cx="13" cy="11.6" r=".9" fill="currentColor"/><circle cx="7" cy="14.2" r=".9" fill="currentColor"/><circle cx="10" cy="14.2" r=".9" fill="currentColor"/></svg>
+      <span>Calendar</span>
+    </button>
+    <button class="tab sb-item" type="button" data-view="reports">
+      <svg class="sb-ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M4.2 16.4v-5.2M8.1 16.4V5.2M12 16.4V8.6M15.9 16.4V3.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      <span>Reports</span>
+    </button>
+  </nav>
+
+  <div class="sb-fill"></div>
+
+  <!-- today's goal ring + quests (js/rewards.js) -->
+  <div id="side-goal-root"></div>
+
+  <button class="tab sb-item sb-settings" type="button" data-view="settings">
+    <svg class="sb-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+    <span>Settings</span>
+  </button>
+
+  <!-- Focus Pro popup -->
+  <button class="tab sb-item" type="button" data-pro-open title="Focus Pro">
+    <svg class="sb-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 13.8 8.2 18.5 10l-4.7 1.8L12 16.5l-1.8-4.7L5.5 10l4.7-1.8L12 3.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M18.5 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8Z" fill="currentColor"/></svg>
+    <span>Focus Pro</span>
+  </button>
+
+  <!-- the account row (js/google.js) -->
+  <div class="sb-account" id="account-root"></div>
+</aside>
+<div class="sb-scrim" id="sb-scrim" aria-hidden="true"></div>
+
+<!-- shows the sidebar again while it is folded away (and opens the drawer on phones) -->
+<button class="sb-open" id="sb-open" type="button" title="Show the sidebar" aria-label="Show the sidebar" aria-controls="sidebar" aria-expanded="false">
+  <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.6" y="3.6" width="14.8" height="12.8" rx="3.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M7.8 3.8v12.4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4.6 6.8h1.4M4.6 9.2h1.4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+</button>
+
+<!-- ─────────────────────────  FOCUS PAGE CORNER (top right, over the scene)  ─────────────────────────
+     Today's Tasks (while its panel is folded away) · Background · Declutter (js/declutter.js:
+     each click strips one more layer: timer + tasks → timer only → scene only → everything back). -->
+<div class="focus-corner" id="focus-corner" role="group" aria-label="Page controls">
+  <button class="corner-btn tasks-open" id="tasks-open" type="button" title="Show Today's Tasks" aria-label="Show Today's Tasks" aria-controls="tasks-panel" aria-expanded="false" hidden>
+    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.6 5.6 5 7l2.2-2.6M3.6 10.4 5 11.8l2.2-2.6M3.6 15.2 5 16.6l2.2-2.6M9.4 5.6h6.8M9.4 10.4h6.8M9.4 15.2h6.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span class="corner-count" id="tasks-open-count" hidden></span>
+  </button>
+  <div id="scene-corner-root"></div>
+  <button class="declutter-btn" id="declutter-btn" type="button">
+    <svg class="dc-ic dc-ic-0" viewBox="0 0 20 20" aria-hidden="true"><path d="M7.5 3.5v4h-4M12.5 3.5v4h4M7.5 16.5v-4h-4M12.5 16.5v-4h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <svg class="dc-ic dc-ic-1" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10.6" r="6" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10 7.6v3l2 1.4M8.2 2.8h3.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <svg class="dc-ic dc-ic-2" viewBox="0 0 20 20" aria-hidden="true"><rect x="2.8" y="4" width="14.4" height="12" rx="2.4" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m3.4 14.2 4.3-4.4 3.2 3.1 2-2 3.6 3.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="13" cy="7.6" r="1.3" fill="currentColor"/></svg>
+    <svg class="dc-ic dc-ic-3" viewBox="0 0 20 20" aria-hidden="true"><path d="M1.8 10S4.8 4.6 10 4.6 18.2 10 18.2 10 15.2 15.4 10 15.4 1.8 10 1.8 10Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="10" cy="10" r="2.6" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
+    <span class="dc-steps" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="dc-label" id="declutter-label"></span>
+  </button>
+</div>
+
+<!-- Scene-only mode with no scene: a prompt to pick one (js/declutter.js fills the tiles) -->
+<div class="scene-prompt" id="scene-prompt" role="dialog" aria-labelledby="scene-prompt-title">
+  <div class="scene-prompt-card">
+    <span class="scene-prompt-art" aria-hidden="true">
+      <svg viewBox="0 0 48 48"><circle cx="31" cy="15" r="5" fill="currentColor" opacity=".9"/><path d="M4 38 17 23l9 9 6-6 12 12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </span>
+    <h2 class="scene-prompt-title" id="scene-prompt-title">Add a scene to fill the screen</h2>
+    <p class="scene-prompt-sub">Scene only mode is all background — and right now there isn't one. Pick a calm view to focus with.</p>
+    <div class="scene-prompt-tiles" id="scene-prompt-tiles"></div>
+    <div class="scene-prompt-actions">
+      <button class="btn btn-primary" id="scene-prompt-more" type="button">Browse all scenes</button>
+      <button class="link-btn" id="scene-prompt-back" type="button">Show everything</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════  FOCUS VIEW  ═══════════════════════════ -->
+<main class="view is-active" id="view-focus" aria-label="Focus">
+  <div class="focus-grid">
+
+    <!-- ───────────  CENTRE: the timer panel, then the music bar under it  ─────────── -->
+    <div class="focus-center">
+    <section class="timer-card stage" aria-label="Timer">
+      <div class="mode-switch" role="tablist" aria-label="Timer mode">
+        <button class="mode-btn is-active" role="tab" data-mode="focus" aria-selected="true">Focus</button>
+        <button class="mode-btn" role="tab" data-mode="shortBreak" aria-selected="false">Short Break</button>
+        <button class="mode-btn" role="tab" data-mode="longBreak" aria-selected="false">Long Break</button>
+      </div>
+
+      <div class="ring-wrap">
+        <svg class="ring" viewBox="0 0 268 268" aria-hidden="true">
+          <circle class="ring-track" cx="134" cy="134" r="120" fill="none" stroke-width="12"/>
+          <circle class="ring-progress" id="ring-progress" cx="134" cy="134" r="120" fill="none" stroke-width="12"
+                  stroke-linecap="round" transform="rotate(-90 134 134)"/>
+        </svg>
+        <div class="ring-center">
+          <output class="ring-time" id="ring-time" aria-live="off">25:00</output>
+          <button class="ring-task" id="ring-task" type="button" title="The task you are focusing on — click to switch or finish it" aria-haspopup="menu" aria-expanded="false" hidden>
+            <span class="ring-task-title" id="ring-task-title"></span>
+            <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.6 6 7.6l3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <span class="ring-message" id="ring-message">Ready when you are</span>
+          <div class="interval-dots" id="interval-dots" aria-label="Progress toward long break" title="Pomodoros done in this round — a long break comes after the last one"></div>
+        </div>
+      </div>
+
+      <div class="transport">
+        <button class="btn btn-glass btn-transport" id="btn-reset" type="button" title="Reset — start this session over" aria-label="Reset timer">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.6 8a5.6 5.6 0 1 1-.5 3.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M3.4 4.2v4h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="btn btn-primary btn-play" id="btn-play" title="Start or pause the timer (Space)">
+          <svg viewBox="0 0 20 20" class="icon-play" aria-hidden="true"><path d="M6 4.2 15 10l-9 5.8V4.2Z" fill="currentColor"/></svg>
+          <svg viewBox="0 0 20 20" class="icon-pause" aria-hidden="true"><path d="M6.2 4h2.6v12H6.2zM11.2 4h2.6v12h-2.6z" fill="currentColor"/></svg>
+          <span id="btn-play-label">Start</span>
+        </button>
+        <button class="btn btn-glass btn-transport" id="btn-skip" type="button" title="Skip — go straight to the next session (break or focus)" aria-label="Skip to the next session">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 4.6 11 10l-7 5.4V4.6Z" fill="currentColor"/><path d="M13 4v12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <!-- Focus rating: swaps in for the transport after a session ends (SPEC-V2 §5.3) -->
+      <div class="rating" id="rating" hidden>
+        <p class="rating-title">How focused were you?</p>
+        <div class="rating-dots" id="rating-dots" role="group" aria-label="Rate this session from 1 to 10"></div>
+        <div class="rating-places" id="rating-places" hidden></div>
+        <button class="link-btn" id="rating-skip">Skip rating</button>
+        <div id="rating-extra-root"></div>
+      </div>
+
+      <div class="now-playing" id="now-playing" hidden>
+        <div class="np-row">
+          <span class="np-art" id="np-art" aria-hidden="true">
+            <span class="eq"><span></span><span></span><span></span><span></span></span>
+          </span>
+          <span class="np-text">
+            <span class="np-title" id="np-title"></span>
+            <span class="np-meta" id="np-meta"></span>
+          </span>
+          <div class="np-controls">
+            <button class="icon-btn small" id="np-prev" title="Previous track" aria-label="Previous track">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11 3.4v9.2L4.6 8 11 3.4ZM4 3.4v9.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button class="icon-btn small" id="np-play" title="Play / pause" aria-label="Play or pause music">
+              <svg viewBox="0 0 16 16" class="icon-play" aria-hidden="true"><path d="M4.6 2.8 12.4 8l-7.8 5.2V2.8Z" fill="currentColor"/></svg>
+              <svg viewBox="0 0 16 16" class="icon-pause" aria-hidden="true"><path d="M5 3v10M11 3v10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
+            <button class="icon-btn small" id="np-next" title="Next track" aria-label="Next track">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.4v9.2L11.4 8 5 3.4ZM12 3.4v9.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="np-progress">
+          <span class="np-time" id="np-elapsed">0:00</span>
+          <div class="np-seek" id="np-seek" role="slider" tabindex="0" aria-label="Seek within track"
+               aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <span class="np-seek-fill" id="np-seek-fill" style="width:0%"></span>
+            <span class="np-seek-thumb" id="np-seek-thumb" style="left:0%"></span>
+          </div>
+          <span class="np-time np-time-right" id="np-duration">0:00</span>
+        </div>
+      </div>
+
+      <div class="timer-footer">
+        <span class="est-finish" id="est-finish" hidden>ends <span id="est-finish-time"></span></span>
+        <span class="kbd-hint" id="kbd-hint" aria-hidden="true" hidden>
+          <kbd>Space</kbd> <span id="kbd-hint-label">to start</span>
+        </span>
+      </div>
+
+      <div id="player-pill-root"></div>
+
+    </section>
+
+    <!-- The music bar (js/player.js renders #ambience-dock-root): what's playing · ▶ · next.
+         The Background button lives in the top-right corner (#scene-corner-root). -->
+    <div class="stage-dock" id="stage-dock" role="group" aria-label="Music">
+      <div id="ambience-dock-root"></div>
+    </div>
+    </div>
+
+    <!-- ───────────  TODAY'S TASKS: a side panel that folds away (js/shell.js)  ─────────── -->
+    <section class="glass card tasks-card" id="tasks-panel" aria-label="Today's tasks">
+      <div id="upnext-root"></div>
+      <header class="card-header">
+        <span class="card-icon" id="tasks-card-icon" aria-hidden="true">
+          <svg viewBox="0 0 20 20"><path d="M3.6 5.6 5 7l2.2-2.6M3.6 10.4 5 11.8l2.2-2.6M3.6 15.2 5 16.6l2.2-2.6M9.4 5.6h6.8M9.4 10.4h6.8M9.4 15.2h6.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <h2 class="card-title">Today's Tasks</h2>
+        <span class="count-badge" id="open-count" hidden>0</span>
+        <!-- Beside the title: the streak chip (#hud-root, rewards.js) and the Focus Guard chip (guard.js) -->
+        <div class="tasks-topline tasks-head-chips" role="group" aria-label="Your streak and Focus Guard">
+          <div id="hud-root"></div>
+          <div id="guard-chip-root"></div>
+        </div>
+        <span class="header-spacer"></span>
+        <span class="estimate-label" id="tasks-estimate" hidden></span>
+        <button class="icon-btn small" id="templates-toggle" title="Task templates" aria-label="Task templates" aria-expanded="false">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 6.5h12M4 10h12M4 13.5h8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="16" cy="13.5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+        </button>
+        <button class="icon-btn small tasks-collapse" id="tasks-collapse" type="button" title="Hide Today's Tasks" aria-label="Hide Today's Tasks" aria-controls="tasks-panel" aria-expanded="true">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.6" y="3.6" width="14.8" height="12.8" rx="3.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12.2 3.8v12.4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M14 6.8h1.4M14 9.2h1.4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </button>
+      </header>
+
+      <div class="templates" id="templates" hidden>
+        <div class="templates-list" id="templates-list"></div>
+        <button class="link-btn" id="templates-add">+ Save a new template</button>
+      </div>
+
+      <div class="card-divider"></div>
+
+      <div class="tasks-body" id="tasks-body">
+        <ul class="task-list" id="task-list"></ul>
+        <div class="empty-state" id="tasks-empty">
+          <span class="empty-art" aria-hidden="true">
+            <svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="20" fill="none" stroke="currentColor" stroke-width="2" opacity=".35"/><circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".18" stroke-dasharray="4 6"/><path d="M25 32.5 30 37.5 40 27" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <p class="empty-title">Nothing on the list yet</p>
+          <p class="empty-sub">Add a task below — or pick a template to start faster.</p>
+        </div>
+      </div>
+
+      <div class="card-divider"></div>
+
+      <form class="add-task" id="add-task-form" autocomplete="off">
+        <input class="add-task-input" id="add-task-input" type="text" placeholder="Add a task…" maxlength="120" aria-label="New task title">
+        <button class="btn btn-glass add-task-btn" type="submit" title="Add task" aria-label="Add task">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4.5v11M4.5 10h11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <details class="add-options" id="add-options">
+          <summary title="Add details" aria-label="Add task details">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 6h13M3.5 10h13M3.5 14h8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M14.5 12.5v4M12.5 14.5h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          </summary>
+          <div class="add-options-body">
+            <label class="field">
+              <span class="field-label">Pomodoros</span>
+              <input class="num-input" id="add-estimate" type="number" min="1" max="12" value="1">
+            </label>
+            <label class="field">
+              <span class="field-label">Category</span>
+              <select class="select" id="add-category"></select>
+            </label>
+            <label class="field">
+              <span class="field-label">Focus spot</span>
+              <input class="text-input" id="add-location" type="text" placeholder="e.g. Library" list="location-options" maxlength="60">
+              <datalist id="location-options"></datalist>
+            </label>
+          </div>
+        </details>
+      </form>
+    </section>
+  </div>
+</main>
+
+<!-- ═══════════════════════════  CALENDAR VIEW (owned by js/calendar.js)  ═══════════════════════════ -->
+<main class="view" id="view-calendar" aria-label="Calendar" hidden></main>
+
+<!-- ═══════════════════════════  REPORTS VIEW  ═══════════════════════════ -->
+<main class="view" id="view-reports" aria-label="Reports" hidden>
+  <div class="reports-wrap">
+    <!-- Header row 40: title · period · tabs · ⋯ (SPEC-V2 §5.6). Opens on Overview. -->
+    <div class="filter-row reports-head">
+      <h1 class="reports-title">Reports</h1>
+      <div class="segmented" id="period-switch" role="tablist" aria-label="Report period">
+        <button class="seg-btn" role="tab" data-period="day" aria-selected="false">Day</button>
+        <button class="seg-btn is-active" role="tab" data-period="week" aria-selected="true">Week</button>
+        <button class="seg-btn" role="tab" data-period="month" aria-selected="false">Month</button>
+      </div>
+      <div class="segmented" id="report-tab-switch" role="tablist" aria-label="Report section">
+        <button class="seg-btn is-active" role="tab" data-rtab="overview" aria-selected="true">Overview</button>
+        <button class="seg-btn" role="tab" data-rtab="insights" aria-selected="false">Insights</button>
+        <button class="seg-btn" role="tab" data-rtab="breakdown" aria-selected="false">Breakdown</button>
+      </div>
+      <div class="filter-spacer"></div>
+      <div class="reports-more">
+        <button class="btn btn-glass btn-sm reports-more-btn" id="reports-more" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="reports-menu" title="Save your sessions as a CSV file, or bring one back in" aria-label="Export or import your sessions (CSV)">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3.5v9M6.5 9 10 12.5 13.5 9M4 15.5h12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Export / Import</span>
+        </button>
+        <div class="reports-menu" id="reports-menu" role="menu" hidden>
+          <button class="reports-menu-item" id="export-csv" type="button" role="menuitem">Export CSV</button>
+          <button class="reports-menu-item" id="import-csv" type="button" role="menuitem">Import CSV…</button>
+        </div>
+      </div>
+      <input type="file" id="import-file" accept=".csv,text/csv" hidden>
+    </div>
+
+    <!-- ───────────  OVERVIEW  ─────────── -->
+    <div class="report-pane is-active" data-rpane="overview">
+      <div class="kpi-row" id="kpi-row"></div>
+
+      <div class="glass card insight-card" id="insight-card" hidden>
+        <span class="insight-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 2.8a5.2 5.2 0 0 0-3 9.5v1.6c0 .5.4.9.9.9h4.2c.5 0 .9-.4.9-.9v-1.6a5.2 5.2 0 0 0-3-9.5ZM8 17.2h4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <p class="insight-text" id="insight-text"></p>
+      </div>
+
+      <div class="overview-charts">
+        <div class="glass card">
+          <div class="card-header">
+            <h2 class="card-title" id="focus-chart-title">Focus by day</h2>
+            <span class="card-unit" id="focus-chart-unit">minutes focused</span>
+            <div class="header-spacer"></div>
+            <button class="table-toggle" type="button" data-table="focus-chart" aria-expanded="false" aria-label="Show focus by day as a table" title="Show these numbers as a table"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2.5" y="3" width="11" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2.5 6.6h11M2.5 9.8h11M6.4 6.6V13" fill="none" stroke="currentColor" stroke-width="1.4"/></svg><span class="tt-lbl">Table</span></button>
+          </div>
+          <div class="chart-wrap" id="focus-chart"></div>
+          <div class="table-view" id="focus-chart-table" hidden></div>
+        </div>
+        <div class="glass card">
+          <div class="card-header">
+            <h2 class="card-title" id="hours-chart-title">Type of work</h2>
+            <div class="header-spacer"></div>
+            <button class="table-toggle" type="button" data-table="hours-chart" aria-expanded="false" aria-label="Show best hours as a table" title="Show these numbers as a table"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2.5" y="3" width="11" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2.5 6.6h11M2.5 9.8h11M6.4 6.6V13" fill="none" stroke="currentColor" stroke-width="1.4"/></svg><span class="tt-lbl">Table</span></button>
+          </div>
+          <div class="chart-wrap hours-wrap" id="hours-chart"></div>
+          <div class="table-view" id="hours-chart-table" hidden></div>
+        </div>
+      </div>
+
+      <div class="glass card">
+        <div class="card-header">
+          <h2 class="card-title">Top tasks</h2>
+        </div>
+        <div id="top-tasks"></div>
+      </div>
+    </div>
+
+    <!-- ───────────  INSIGHTS  ─────────── -->
+    <div class="report-pane" data-rpane="insights" hidden>
+      <div class="glass card">
+        <div class="card-header">
+          <h2 class="card-title">Focus Rating</h2>
+          <div class="header-spacer"></div>
+          <button class="table-toggle" type="button" data-table="rating-chart" aria-expanded="false" aria-label="Show rating as a table" title="Show these numbers as a table"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2.5" y="3" width="11" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2.5 6.6h11M2.5 9.8h11M6.4 6.6V13" fill="none" stroke="currentColor" stroke-width="1.4"/></svg><span class="tt-lbl">Table</span></button>
+        </div>
+        <div class="chart-wrap" id="rating-chart"></div>
+        <div class="table-view" id="rating-chart-table" hidden></div>
+      </div>
+
+      <div class="two-col">
+        <div class="glass card">
+          <div class="card-header">
+            <h2 class="card-title">Focus Spots</h2>
+            <div class="header-spacer"></div>
+            <button class="table-toggle" type="button" data-table="spot-chart" aria-expanded="false" aria-label="Show spot as a table" title="Show these numbers as a table"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2.5" y="3" width="11" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2.5 6.6h11M2.5 9.8h11M6.4 6.6V13" fill="none" stroke="currentColor" stroke-width="1.4"/></svg><span class="tt-lbl">Table</span></button>
+          </div>
+          <div id="spot-stats"></div>
+          <div class="chart-wrap" id="spot-chart"></div>
+          <div class="table-view" id="spot-chart-table" hidden></div>
+        </div>
+        <div class="glass card">
+          <div class="card-header">
+            <h2 class="card-title">Ambience</h2>
+            <div class="header-spacer"></div>
+            <button class="table-toggle" type="button" data-table="ambience-chart" aria-expanded="false" aria-label="Show ambience as a table" title="Show these numbers as a table"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2.5" y="3" width="11" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2.5 6.6h11M2.5 9.8h11M6.4 6.6V13" fill="none" stroke="currentColor" stroke-width="1.4"/></svg><span class="tt-lbl">Table</span></button>
+          </div>
+          <div id="ambience-stats"></div>
+          <div class="chart-wrap" id="ambience-chart"></div>
+          <div class="table-view" id="ambience-chart-table" hidden></div>
+        </div>
+      </div>
+
+      <div class="glass card">
+        <div class="card-header">
+          <h2 class="card-title">Music Genres by Focus Rating</h2>
+        </div>
+        <div id="genre-stats"></div>
+      </div>
+    </div>
+
+    <!-- ───────────  BREAKDOWN  ─────────── -->
+    <div class="report-pane" data-rpane="breakdown" hidden>
+      <div class="glass card">
+        <div class="card-header">
+          <h2 class="card-title">Where your focus went</h2>
+          <div class="segmented rep-dim" id="rep-dim" role="radiogroup" aria-label="Group focus time by">
+            <button class="seg-btn is-active" type="button" role="radio" aria-checked="true" data-dim="type">Type of work</button>
+            <button class="seg-btn" type="button" role="radio" aria-checked="false" data-dim="place">Place</button>
+            <button class="seg-btn" type="button" role="radio" aria-checked="false" data-dim="music">Music</button>
+            <button class="seg-btn" type="button" role="radio" aria-checked="false" data-dim="time">Time of day</button>
+          </div>
+          <div class="header-spacer"></div>
+          <button class="table-toggle" type="button" data-table="category-chart" aria-expanded="false" aria-label="Show focus by category as a table" title="Show these numbers as a table"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2.5" y="3" width="11" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2.5 6.6h11M2.5 9.8h11M6.4 6.6V13" fill="none" stroke="currentColor" stroke-width="1.4"/></svg><span class="tt-lbl">Table</span></button>
+        </div>
+        <div class="chart-wrap" id="category-chart"></div>
+        <div class="table-view" id="category-chart-table" hidden></div>
+      </div>
+
+      <div class="two-col">
+        <div class="glass card">
+          <div class="card-header"><h2 class="card-title">Sessions</h2></div>
+          <div id="breakdown-summary"></div>
+        </div>
+        <div class="glass card">
+          <div class="card-header"><h2 class="card-title">Tasks you focused on</h2></div>
+          <div id="completion-summary"></div>
+        </div>
+      </div>
+
+      <div class="glass card">
+        <div class="card-header"><h2 class="card-title">Every session</h2></div>
+        <div id="session-table" class="table-view is-open"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ═══════════════════════════  SETTINGS VIEW  ═══════════════════════════ -->
+<main class="view" id="view-settings" aria-label="Settings" hidden>
+  <div class="settings-wrap">
+    <!-- Sticky chip index (SPEC-V2 §5.7); built by settings.js from the groups below. -->
+    <nav class="settings-index glass" id="settings-index" aria-label="Settings sections"></nav>
+
+    <!-- Seven groups, in order (SPEC-V2 E17). Built-in cards carry data-settings-section (the
+         registry hides them when an owner registers that section) and data-order (registered
+         cards slot in by order). The Focus Guard group shows only once W4 registers it. -->
+
+    <!-- 1 · Timer & Tasks -->
+    <section class="settings-group" data-group="timer" aria-labelledby="sg-timer">
+      <header class="settings-group-head">
+        <h2 class="settings-group-title" id="sg-timer">Timer &amp; Tasks</h2>
+        <p class="settings-group-sub">How long you focus and rest, and what starts on its own.</p>
+      </header>
+      <div class="settings-group-body">
+        <div class="glass card settings-card" data-settings-section="timer" data-order="10">
+          <div class="settings-pairs">
+            <label class="field">
+              <span class="field-label">Focus <span class="field-value" id="v-focus">25 min</span></span>
+              <input type="range" id="s-focus" min="1" max="90" step="1" value="25">
+            </label>
+            <label class="field">
+              <span class="field-label">Short break <span class="field-value" id="v-short">5 min</span></span>
+              <input type="range" id="s-short" min="1" max="30" step="1" value="5">
+            </label>
+            <label class="field">
+              <span class="field-label">Long break <span class="field-value" id="v-long">15 min</span></span>
+              <input type="range" id="s-long" min="1" max="60" step="1" value="15">
+            </label>
+            <label class="field">
+              <span class="field-label">Daily focus goal <span class="field-value" id="v-goal">120 min</span></span>
+              <input type="range" id="s-goal" min="15" max="480" step="15" value="120">
+            </label>
+          </div>
+          <div class="settings-rows">
+            <label class="toggle"><input type="checkbox" id="s-autobreak"><span class="switch"></span><span class="toggle-text">Start breaks automatically</span></label>
+            <label class="toggle"><input type="checkbox" id="s-autofocus"><span class="switch"></span><span class="toggle-text">Start focus sessions automatically</span></label>
+          </div>
+          <details class="settings-more">
+            <summary>More</summary>
+            <div class="settings-more-body">
+              <label class="field">
+                <span class="field-label">Long break every <span class="field-value"><span id="v-interval">4</span> pomodoros</span></span>
+                <input type="range" id="s-interval" min="2" max="8" step="1" value="4">
+              </label>
+              <label class="toggle"><input type="checkbox" id="s-switchsound"><span class="switch"></span><span class="toggle-text">Play a soft sound when switching modes</span></label>
+              <label class="toggle"><input type="checkbox" id="s-showdone"><span class="switch"></span><span class="toggle-text">Show completed tasks in the list</span></label>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 · Sounds (built-in cards until W5 registers the Sounds section) -->
+    <section class="settings-group" data-group="sounds" aria-labelledby="sg-sounds">
+      <header class="settings-group-head">
+        <h2 class="settings-group-title" id="sg-sounds">Sounds</h2>
+        <p class="settings-group-sub">Alarm, ambience and music.</p>
+      </header>
+      <div class="settings-group-body">
+        <div class="two-col" data-settings-section="sounds" data-order="10">
+          <div class="glass card settings-card">
+            <div class="card-header"><h3 class="card-title">Alarm</h3></div>
+            <div class="sound-grid" id="alarm-grid"></div>
+            <label class="field">
+              <span class="field-label">Alarm volume <span class="field-value" id="v-alarmvol">80%</span></span>
+              <input type="range" id="s-alarmvol" min="0" max="100" step="5" value="80">
+            </label>
+          </div>
+          <div class="glass card settings-card">
+            <div class="card-header"><h3 class="card-title">Ambience</h3></div>
+            <div class="sound-grid" id="ambience-grid"></div>
+            <label class="field">
+              <span class="field-label">Ambience volume <span class="field-value" id="v-ambvol">50%</span></span>
+              <input type="range" id="s-ambvol" min="0" max="100" step="5" value="50">
+            </label>
+          </div>
+        </div>
+
+        <div class="glass card settings-card" data-settings-section="sounds" data-order="20">
+          <div class="card-header">
+            <h3 class="card-title">Music</h3>
+            <div class="header-spacer"></div>
+            <span class="muted-note" id="music-count"></span>
+          </div>
+          <div class="sound-grid" id="genre-chips"></div>
+          <div class="mini-player" id="mini-player">
+            <div class="mp-now">
+              <span class="mp-art" aria-hidden="true">
+                <span class="eq"><span></span><span></span><span></span><span></span></span>
+              </span>
+              <span class="mp-text">
+                <span class="mp-title" id="mp-title">Nothing playing</span>
+                <span class="mp-meta" id="mp-meta">Choose a genre above</span>
+              </span>
+              <div class="mp-controls">
+                <button class="icon-btn small" id="mp-prev" title="Previous track" aria-label="Previous track">
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11 3.4v9.2L4.6 8 11 3.4ZM4 3.4v9.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button class="btn btn-glass btn-sm mp-play" id="mp-play" title="Play / pause" aria-label="Play or pause music">Play</button>
+                <button class="icon-btn small" id="mp-next" title="Next track" aria-label="Next track">
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.4v9.2L11.4 8 5 3.4ZM12 3.4v9.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="mp-bar">
+              <span class="mp-elapsed" id="mp-elapsed">0:00</span>
+              <div class="mp-track" id="mp-track"><span class="mp-fill" id="mp-fill" style="width:0%"></span></div>
+              <span class="mp-duration" id="mp-duration">0:00</span>
+            </div>
+          </div>
+          <label class="field">
+            <span class="field-label">Music volume <span class="field-value" id="v-musicvol">40%</span></span>
+            <input type="range" id="s-musicvol" min="0" max="100" step="5" value="40">
+          </label>
+          <details class="settings-more">
+            <summary>More</summary>
+            <div class="settings-more-body">
+              <label class="toggle"><input type="checkbox" id="s-ticking"><span class="switch"></span><span class="toggle-text">Ticking sound each second</span></label>
+              <div class="music-toolbar">
+                <input class="text-input music-search" id="music-search" type="search" placeholder="Search tracks or artists…" aria-label="Search tracks" autocomplete="off">
+                <button class="btn btn-glass btn-sm" id="music-shuffle" title="Shuffle the selected genre">
+                  <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M3 5h3l6 8h3m0 0-2-2m2 2-2 2M3 13h3l1.5-2M14 5h-2.5L9.5 8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Shuffle
+                </button>
+              </div>
+              <div class="genre-list" id="genre-list"></div>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 · Look -->
+    <section class="settings-group" data-group="look" aria-labelledby="sg-look">
+      <header class="settings-group-head">
+        <h2 class="settings-group-title" id="sg-look">Look</h2>
+        <p class="settings-group-sub">Theme, appearance and what sits behind your timer.</p>
+      </header>
+      <div class="settings-group-body">
+        <div class="glass card settings-card look-card" data-settings-section="look" data-order="10">
+          <div class="theme-grid" id="theme-grid" role="radiogroup" aria-label="Theme"></div>
+          <div class="settings-rows look-rows">
+            <div class="pref-row pref-row--44">
+              <div class="pref-text">
+                <span class="pref-title" id="lbl-scheme">Appearance</span>
+                <span class="pref-hint" id="hint-scheme"></span>
+              </div>
+              <div class="segmented" id="s-scheme" role="radiogroup" aria-labelledby="lbl-scheme" data-setting="colorScheme">
+                <button class="seg-btn" type="button" role="radio" data-value="light" aria-checked="false">Light</button>
+                <button class="seg-btn" type="button" role="radio" data-value="dark" aria-checked="true">Dark</button>
+                <button class="seg-btn" type="button" role="radio" data-value="system" aria-checked="false">System</button>
+              </div>
+            </div>
+            <label class="field pref-row--44">
+              <span class="field-label">Aurora intensity <span class="field-value" id="v-aurora">60%</span></span>
+              <input type="range" id="s-aurora" min="0" max="100" step="5" value="60">
+            </label>
+            <div class="scene-preview" id="look-scene">
+              <span class="scene-preview-art" id="look-scene-art" aria-hidden="true"></span>
+              <span class="scene-preview-text">
+                <span class="scene-preview-label">Background</span>
+                <span class="scene-preview-title" id="look-scene-title">Aurora</span>
+              </span>
+              <button class="btn btn-glass btn-sm" type="button" id="look-scene-change">Change scene…</button>
+            </div>
+          </div>
+          <details class="settings-more">
+            <summary>More</summary>
+            <div class="settings-more-body">
+              <label class="toggle"><input type="checkbox" id="s-reduce"><span class="switch"></span><span class="toggle-text">Reduce motion</span></label>
+              <div id="settings-scenes-root" class="settings-scene-controls"></div>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 · Rewards -->
+    <section class="settings-group" data-group="rewards" aria-labelledby="sg-rewards">
+      <header class="settings-group-head">
+        <h2 class="settings-group-title" id="sg-rewards">Rewards</h2>
+        <p class="settings-group-sub">XP, streaks, quests and the moments that mark them.</p>
+      </header>
+      <div class="settings-group-body">
+        <div class="glass card settings-card rewards-settings" id="rewards-settings" data-settings-section="rewards" data-order="10">
+          <div class="settings-rows">
+            <div class="pref-row">
+              <div class="pref-text">
+                <span class="pref-title" id="lbl-engagement">Motivation</span>
+                <span class="pref-hint" id="hint-engagement"></span>
+              </div>
+              <div class="segmented" id="s-engagement" role="radiogroup" aria-labelledby="lbl-engagement" data-setting="engagementMode">
+                <button class="seg-btn" type="button" role="radio" data-value="full" aria-checked="true">Full</button>
+                <button class="seg-btn" type="button" role="radio" data-value="calm" aria-checked="false">Calm</button>
+                <button class="seg-btn" type="button" role="radio" data-value="off" aria-checked="false">Off</button>
+              </div>
+            </div>
+            <div class="pref-row">
+              <div class="pref-text">
+                <span class="pref-title" id="lbl-celebrations">Celebrations</span>
+                <span class="pref-hint" id="hint-celebrations"></span>
+              </div>
+              <div class="segmented" id="s-celebrations" role="radiogroup" aria-labelledby="lbl-celebrations" data-setting="celebrations">
+                <button class="seg-btn" type="button" role="radio" data-value="full" aria-checked="true">Full</button>
+                <button class="seg-btn" type="button" role="radio" data-value="subtle" aria-checked="false">Subtle</button>
+                <button class="seg-btn" type="button" role="radio" data-value="off" aria-checked="false">Off</button>
+              </div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="s-celebsounds"><span class="switch"></span><span class="toggle-text">Celebration sounds</span></label>
+            <button class="link-btn pf-pop-explain" type="button" id="rewards-explain"><span class="pf-q" aria-hidden="true">?</span>What do level, XP, streak, rest days, quests and achievements mean?</button>
+          </div>
+          <details class="settings-more">
+            <summary>What earns XP?</summary>
+            <div class="settings-more-body xp-explainer">
+              <ul class="xp-list">
+                <li><span>Focus time</span><span>10 XP a minute for your first 5 hours a day, then 5 XP a minute up to 8 hours</span></li>
+                <li><span>Finishing a session</span><span>2 XP per minute of the session, up to 100</span></li>
+                <li><span>Rating a session</span><span>20 XP, whatever the rating</span></li>
+                <li><span>Your daily goal</span><span>2 XP per goal minute when you reach it</span></li>
+                <li><span>Quests</span><span>40 · 70 · 120 XP, and 70 more for all three</span></li>
+                <li><span>Streaks and combos</span><span>Up to +25 % for a streak and +20 % for back-to-back sessions</span></li>
+                <li><span>Golden sessions</span><span>One finished session in ten doubles its minute XP</span></li>
+              </ul>
+              <p class="muted-note">XP is worked out from your session history, so it is the same on every device.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 · Focus Guard (W4 registers it; hidden while empty) -->
+    <section class="settings-group" data-group="guard" aria-labelledby="sg-guard" hidden>
+      <header class="settings-group-head">
+        <h2 class="settings-group-title" id="sg-guard">Focus Guard</h2>
+        <p class="settings-group-sub">Gentle check-ins and blocking, only while you focus.</p>
+      </header>
+      <div class="settings-group-body"></div>
+    </section>
+
+    <!-- 6 · Calendar & Accounts -->
+    <section class="settings-group" data-group="calendar" aria-labelledby="sg-calendar">
+      <header class="settings-group-head">
+        <h2 class="settings-group-title" id="sg-calendar">Calendar &amp; Accounts</h2>
+        <p class="settings-group-sub">Your account, calendars you subscribe to, and your courses.</p>
+      </header>
+      <div class="settings-group-body">
+        <div id="settings-calendar-root" data-settings-section="calendar" data-order="20"></div>
+        <div id="settings-account-root" data-settings-section="calendar" data-order="90"></div>
+      </div>
+    </section>
+
+    <!-- 7 · Data -->
+    <section class="settings-group" data-group="data" aria-labelledby="sg-data">
+      <header class="settings-group-head">
+        <h2 class="settings-group-title" id="sg-data">Data</h2>
+        <p class="settings-group-sub">Your data is stored in your Pure Focus account and synced across your devices. This browser keeps a copy for fast, offline use.</p>
+      </header>
+      <div class="settings-group-body">
+        <div class="glass card settings-card" data-settings-section="data" data-order="10">
+          <div class="data-actions">
+            <button class="btn btn-glass btn-sm" id="export-csv-2" type="button">Export CSV</button>
+            <button class="btn btn-glass btn-sm" id="import-csv-2" type="button">Import CSV</button>
+            <button class="btn btn-glass btn-sm" id="import-ics-2" type="button">Import .ics</button>
+            <span class="header-spacer"></span>
+            <button class="btn btn-glass btn-sm btn-quiet-danger" id="reset-data" type="button" aria-expanded="false" aria-controls="reset-confirm">Reset all data…</button>
+          </div>
+          <input type="file" id="import-ics-file" accept=".ics,.ical,.icalendar,text/calendar" multiple hidden>
+          <div class="reset-confirm" id="reset-confirm" role="group" aria-labelledby="reset-confirm-text" hidden>
+            <p id="reset-confirm-text">This deletes every task, session and setting on this device. It can’t be undone.</p>
+            <div class="reset-confirm-actions">
+              <button class="btn btn-glass btn-sm" id="reset-cancel" type="button">Cancel</button>
+              <button class="btn btn-sm btn-danger" id="reset-go" type="button">Delete everything</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- Task editor sheet -->
+<div class="sheet-backdrop" id="sheet-backdrop" hidden></div>
+<div class="sheet" id="task-sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" hidden>
+  <header class="sheet-header">
+    <h2 id="sheet-title">Edit task</h2>
+    <button class="icon-btn" id="sheet-close" aria-label="Close">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 5.5l9 9m0-9-9 9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+  </header>
+  <div class="sheet-body">
+    <label class="field">
+      <span class="field-label">Title</span>
+      <input class="text-input" id="edit-title" type="text" maxlength="120">
+    </label>
+    <label class="field">
+      <span class="field-label">Pomodoros <span class="field-value" id="v-edit-est">1</span></span>
+      <input type="range" id="edit-estimate" min="1" max="12" step="1" value="1">
+    </label>
+    <label class="field">
+      <span class="field-label">Category</span>
+      <select class="select" id="edit-category"></select>
+    </label>
+    <label class="field">
+      <span class="field-label">Focus spot</span>
+      <input class="text-input" id="edit-location" type="text" list="location-options-2" maxlength="60">
+      <datalist id="location-options-2"></datalist>
+    </label>
+    <div class="field">
+      <span class="field-label">Subtasks</span>
+      <div class="subtask-editor" id="subtask-editor"></div>
+      <button class="link-btn" id="subtask-add">+ Add subtask</button>
+    </div>
+  </div>
+  <footer class="sheet-footer">
+    <button class="btn btn-glass" id="sheet-cancel">Cancel</button>
+    <button class="btn btn-primary" id="sheet-save">Save</button>
+  </footer>
+</div>
+
+<div class="toast-stack" id="toast-stack" aria-live="polite"></div>
+
+<!-- Focus Guard check-ins (W4): a body child above the views, z 90 (SPEC-V2 §5.3) -->
+<div id="nudge-layer"></div>
+
+<script src="js/config.js?v=10311900"></script>
+<script src="js/pro-config.js?v=10312000"></script>
+<script src="js/plan.js?v=10314000"></script>
+<script src="js/premium-gate.js?v=10318000"></script>
+<script src="js/themes.js?v=10211152"></script>
+<script src="js/profile.js?v=10211152"></script>
+<script src="js/store.js?v=11041001"></script>
+<script src="js/engagement.js?v=11041001"></script>
+<script src="js/calendar-migrate.js?v=10211152"></script>
+<script src="js/csv.js?v=10302145"></script>
+<script src="js/soundcore.js?v=10211152"></script>
+<script src="js/audio.js?v=11041001"></script>
+<script src="js/charts.js?v=10302145"></script>
+<script src="js/cloudref.js?v=10211152"></script>
+<script src="js/cloud.js?v=10316000"></script>
+<script src="js/tasks.js?v=11041001"></script>
+<script src="js/tasksync.js?v=11041001"></script>
+<script src="js/timer.js?v=11041001"></script>
+<script src="js/reports.js?v=11041001"></script>
+<script src="js/settings.js?v=10312500"></script>
+<script src="js/ics.js?v=10302145"></script>
+<script src="js/scenes.js?v=10271700"></script>
+<script src="js/player.js?v=10302145"></script>
+<script src="js/rewards.js?v=10302145"></script>
+<script src="js/friends.js?v=10211152"></script>
+<script src="js/cloud-ui.js?v=10251600"></script>
+<script src="js/insights-core.js?v=11041001"></script>
+<script src="js/insights.js?v=11041001"></script>
+<script src="js/guard-rules.js?v=10211152"></script>
+<script src="js/guard.js?v=10302145"></script>
+<script src="js/feeds.js?v=10316000"></script>
+<script src="js/assignments.js?v=11041001"></script>
+<script src="js/calendar-core.js?v=10211152"></script>
+<script src="js/google.js?v=11041001"></script>
+<script src="js/calendar.js?v=11041001"></script>
+<script src="js/study-plan.js?v=10211152"></script>
+<script src="js/ai.js?v=10251600"></script>
+<script src="js/courses.js?v=10302145"></script>
+<script src="js/coach.js?v=10231200"></script>
+<script src="js/calendar-tasks.js?v=10302145"></script>
+<script src="js/declutter.js?v=10271700"></script>
+<script src="js/shell.js?v=10310900"></script>
+<script src="js/pro-modal.js?v=10318000"></script>
+<script src="js/auth-gate.js?v=10312000"></script>
+<script src="js/app.js?v=10312500"></script>
+</body>
+</html>

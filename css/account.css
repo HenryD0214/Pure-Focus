@@ -1,0 +1,442 @@
+/* account.css — Google account chip, account menu, setup/sign-in popover and
+   the Settings › "Account & Google" card. Owned by js/google.js. */
+
+#account-root.gs-account { display: flex; align-items: center; }
+
+.gs-icon { width: 16px; height: 16px; flex: none; }
+.gs-icon--sm { width: 13px; height: 13px; }
+
+/* ───────────────────────── Sign-in button (generic, not Google's mark) ───────────────────────── */
+
+.gs-signin {
+  appearance: none;
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 14px 0 4px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hairline);
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: background 0.18s, border-color 0.18s, transform 0.14s, box-shadow 0.18s;
+}
+.gs-signin:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.gs-signin:active { transform: scale(0.97); }
+.gs-signin:focus-visible { outline: 2px solid var(--focus-tint); outline-offset: 2px; }
+.gs-signin[aria-expanded="true"] {
+  background: color-mix(in srgb, var(--focus-tint) 16%, rgba(255, 255, 255, 0.06));
+  border-color: color-mix(in srgb, var(--focus-tint) 45%, transparent);
+}
+
+.gs-signin-icon {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--focus-tint) 92%, white),
+    color-mix(in srgb, var(--focus-tint) 78%, black));
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--focus-tint) 40%, transparent),
+              inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.gs-signin-icon .gs-icon { width: 15px; height: 15px; stroke-width: 1.8; }
+
+.gs-signin--card { height: 40px; padding: 0 18px 0 5px; font-size: 13.5px; flex: none; }
+.gs-signin--card .gs-signin-icon { width: 30px; height: 30px; }
+
+:root[data-theme="light"] .gs-signin { background: rgba(255, 255, 255, 0.78); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); }
+:root[data-theme="light"] .gs-signin:hover { background: #fff; border-color: rgba(11, 11, 11, 0.16); }
+
+/* In the top bar the account control is always an icon-only 36px avatar (a
+   person glyph while signed out); the popover and the Settings card carry the
+   full sign-in UI. The label stays in the DOM as the accessible name. */
+.gs-signin--topbar {
+  width: 36px; height: 36px; padding: 0; justify-content: center;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+}
+.gs-signin--topbar:hover { color: var(--text-primary); }
+/* signed out: a plain person glyph in the same style as the other bar icons */
+.gs-signin--topbar .gs-signin-icon {
+  width: 18px; height: 18px;
+  color: inherit;
+  background: none;
+  box-shadow: none;
+}
+.gs-signin--topbar .gs-signin-icon .gs-icon { width: 18px; height: 18px; stroke-width: 1.7; }
+:root[data-theme="light"] .gs-signin--topbar { background: rgba(255, 255, 255, 0.6); box-shadow: none; }
+.gs-signin--topbar .gs-signin-label {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+
+/* ───────────────────────── Avatar ───────────────────────── */
+
+.gs-avatar {
+  --gs-av: var(--accent);
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  border-radius: 50%;
+  overflow: hidden;
+  color: #fff;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  background: linear-gradient(150deg,
+    color-mix(in srgb, var(--gs-av) 85%, white),
+    color-mix(in srgb, var(--gs-av) 75%, black));
+  -webkit-user-select: none;
+  user-select: none;
+}
+.gs-avatar img {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.gs-avatar.has-photo img { opacity: 1; }
+.gs-avatar.has-photo .gs-avatar-initials { visibility: hidden; }
+
+.gs-avatar--sm { width: 30px; height: 30px; font-size: 11.5px; }
+.gs-avatar--md { width: 40px; height: 40px; font-size: 14px; }
+.gs-avatar--lg { width: 48px; height: 48px; font-size: 17px; }
+
+.gs-avatar-btn {
+  appearance: none;
+  position: relative;
+  width: 36px; height: 36px;
+  padding: 2px;
+  border-radius: 50%;
+  border: 1px solid var(--hairline);
+  background: rgba(255, 255, 255, 0.06);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform 0.14s, border-color 0.18s, box-shadow 0.18s;
+}
+.gs-avatar-btn:hover { border-color: rgba(255, 255, 255, 0.24); }
+.gs-avatar-btn:active { transform: scale(0.95); }
+.gs-avatar-btn:focus-visible { outline: 2px solid var(--focus-tint); outline-offset: 2px; }
+.gs-avatar-btn[aria-expanded="true"] {
+  border-color: color-mix(in srgb, var(--focus-tint) 60%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus-tint) 22%, transparent);
+}
+.gs-avatar-btn.is-busy::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: var(--focus-tint);
+  border-right-color: color-mix(in srgb, var(--focus-tint) 45%, transparent);
+  animation: gs-spin 0.9s linear infinite;
+}
+
+/* ───────────────────────── Popover (glass panel) ───────────────────────── */
+
+.gs-pop {
+  position: fixed;
+  z-index: 50;
+  width: min(360px, calc(100vw - 24px));
+  padding: 18px;
+  color: var(--text-primary);
+  background: rgba(22, 22, 27, 0.9);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  backdrop-filter: blur(28px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 22px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14),
+              inset 0 -1px 0 rgba(0, 0, 0, 0.25),
+              0 24px 60px -24px rgba(0, 0, 0, 0.7),
+              0 2px 10px rgba(0, 0, 0, 0.18);
+  opacity: 0;
+  transform: translateY(-6px) scale(0.98);
+  transform-origin: var(--gs-origin-x, 90%) top;
+  transition: opacity 160ms cubic-bezier(.16, 1, .3, 1),
+              transform 420ms linear(0, 0.099 6.2%, 0.296 12.5%, 0.500 18.8%, 0.672 25%, 0.800 31.2%, 0.888 37.5%, 0.944 43.8%, 0.977 50%, 0.995 56.2%, 1.003 62.5%, 1.006 68.8%, 1.006 75%, 1.005 81.2%, 1.004 87.5%, 1.003 93.8%, 1);
+  outline: none;
+}
+.gs-pop[data-side="above"] { transform-origin: var(--gs-origin-x, 90%) bottom; transform: translateY(6px) scale(0.98); }
+.gs-pop.is-open { opacity: 1; transform: none; }
+
+:root[data-theme="light"] .gs-pop {
+  background: rgba(255, 255, 255, 0.93);
+  border-color: rgba(11, 11, 11, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9),
+              0 24px 60px -24px rgba(0, 0, 0, 0.28),
+              0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.gs-pop-head { display: flex; gap: 12px; align-items: flex-start; }
+.gs-pop-badge {
+  width: 36px; height: 36px;
+  flex: none;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: color-mix(in srgb, var(--focus-tint) 82%, white);
+  background: color-mix(in srgb, var(--focus-tint) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--focus-tint) 26%, transparent);
+}
+.gs-pop-badge .gs-icon { width: 18px; height: 18px; }
+:root[data-theme="light"] .gs-pop-badge { color: color-mix(in srgb, var(--focus-tint) 76%, black); }
+
+.gs-pop-title { margin: 1px 0 3px; font-size: 15px; font-weight: 650; letter-spacing: -0.01em; }
+.gs-pop-sub { margin: 0; font-size: 13px; line-height: 1.45; color: var(--text-secondary); }
+
+.gs-steps {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 4px;
+  display: grid;
+  gap: 2px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  counter-reset: none;
+}
+:root[data-theme="light"] .gs-steps { background: rgba(11, 11, 11, 0.035); border-color: rgba(11, 11, 11, 0.05); }
+.gs-steps li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 10px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+.gs-steps b { color: var(--text-primary); font-weight: 600; }
+.gs-steps code {
+  font: 500 11.5px/1.4 ui-monospace, "SF Mono", Menlo, monospace;
+  padding: 1px 6px;
+  border-radius: 6px;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.08);
+  word-break: break-all;
+}
+:root[data-theme="light"] .gs-steps code { background: rgba(11, 11, 11, 0.06); }
+.gs-step-n {
+  flex: none;
+  width: 20px; height: 20px;
+  margin-top: -1px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in srgb, var(--focus-tint) 82%, white);
+  background: color-mix(in srgb, var(--focus-tint) 16%, transparent);
+}
+:root[data-theme="light"] .gs-step-n { color: color-mix(in srgb, var(--focus-tint) 76%, black); }
+
+.gs-pop-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+}
+.gs-console-link { text-decoration: none; padding: 0 14px; }
+.gs-console-link .gs-icon { width: 14px; height: 14px; opacity: 0.8; }
+.gs-pop-note { font-size: 11.5px; color: var(--text-muted); text-align: right; }
+
+.gs-gis-slot {
+  margin-top: 16px;
+  min-height: 44px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color-scheme: normal;
+}
+.gs-gis-slot--card { margin-top: 0; justify-content: flex-end; flex: none; min-width: 260px; }
+.gs-gis-wait { font-size: 12.5px; color: var(--text-muted); }
+
+.gs-privacy {
+  display: flex;
+  gap: 7px;
+  align-items: flex-start;
+  margin: 14px 0 0;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+.gs-privacy .gs-icon { margin-top: 1px; }
+
+/* ── account menu ── */
+
+.gs-pop--menu { width: min(290px, calc(100vw - 24px)); padding: 6px; }
+.gs-menu-head { display: flex; align-items: center; gap: 11px; padding: 10px 10px 10px; }
+.gs-id { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
+.gs-id-name, .gs-id-email, .gs-id .gs-card-lead, .gs-id .gs-card-muted {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gs-id-name { font-size: 14px; font-weight: 650; letter-spacing: -0.01em; }
+.gs-id-email { font-size: 12px; color: var(--text-secondary); }
+.gs-menu-sep { height: 1px; margin: 4px 8px; background: var(--hairline); }
+
+.gs-menu-item {
+  appearance: none;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s;
+}
+.gs-menu-item .gs-icon { color: var(--text-secondary); }
+.gs-menu-item > span:not(.gs-spinner) { flex: 1; }
+.gs-menu-item:hover, .gs-menu-item:focus-visible {
+  outline: none;
+  background: rgba(255, 255, 255, 0.08);
+}
+:root[data-theme="light"] .gs-menu-item:hover,
+:root[data-theme="light"] .gs-menu-item:focus-visible { background: rgba(11, 11, 11, 0.05); }
+.gs-menu-item:focus-visible { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--focus-tint) 55%, transparent); }
+.gs-menu-item:disabled { cursor: default; color: var(--text-secondary); }
+.gs-menu-item.is-danger { color: #ff7a70; }
+.gs-menu-item.is-danger .gs-icon { color: currentColor; }
+:root[data-theme="light"] .gs-menu-item.is-danger { color: #d0302a; }
+
+/* ───────────────────────── Settings card ───────────────────────── */
+
+.gs-card { gap: 16px; }
+.gs-card-body { display: flex; flex-direction: column; gap: 14px; }
+.gs-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.gs-card-copy { flex: 1 1 320px; min-width: 0; }
+.gs-card-lead { margin: 0; font-size: 14.5px; font-weight: 600; letter-spacing: -0.005em; color: var(--text-primary); }
+.gs-card-muted { margin: 4px 0 0; font-size: 13px; line-height: 1.5; color: var(--text-secondary); max-width: 62ch; }
+.gs-id .gs-card-muted { margin-top: 0; }
+.gs-identity { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1 1 260px; }
+
+.gs-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.gs-import-btn { gap: 8px; }
+.gs-import-btn:disabled, .gs-signout-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+.gs-import-btn:disabled:hover { background: rgba(255, 255, 255, 0.07); }
+:root[data-theme="light"] .gs-import-btn:disabled:hover { background: rgba(255, 255, 255, 0.75); }
+
+.gs-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 11px 4px 9px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--hairline);
+}
+.gs-status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); }
+.gs-status--on { color: #5fe08a; }
+.gs-status--on .gs-status-dot { background: #30d158; box-shadow: 0 0 0 3px rgba(48, 209, 88, 0.2); }
+.gs-status--idle .gs-status-dot { background: var(--text-secondary); }
+.gs-status--off .gs-status-dot { background: #ffd60a; box-shadow: 0 0 0 3px rgba(255, 214, 10, 0.16); }
+:root[data-theme="light"] .gs-status { background: rgba(11, 11, 11, 0.04); }
+:root[data-theme="light"] .gs-status--on { color: #1d8a3e; }
+:root[data-theme="light"] .gs-status--off .gs-status-dot { background: #e0a800; }
+
+.gs-last {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px;
+}
+.gs-last-row {
+  padding: 10px 14px;
+  border-radius: var(--radius-inner);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+:root[data-theme="light"] .gs-last-row { background: rgba(11, 11, 11, 0.035); border-color: rgba(11, 11, 11, 0.05); }
+.gs-last-row dt { font-size: 11.5px; color: var(--text-muted); font-weight: 550; }
+.gs-last-row dd { margin: 2px 0 0; font-size: 13px; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+
+.gs-card .gs-privacy { margin-top: 0; }
+
+/* ───────────────────────── spinner + motion ───────────────────────── */
+
+.gs-spinner {
+  width: 14px; height: 14px;
+  flex: none;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-top-color: currentColor;
+  animation: gs-spin 0.8s linear infinite;
+}
+@keyframes gs-spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .gs-pop { transition: opacity 1ms; transform: none; }
+  .gs-spinner, .gs-avatar-btn.is-busy::after { animation-duration: 2.4s; }
+}
+body.reduce-motion .gs-pop { transition: opacity 1ms; transform: none; }
+
+@media (prefers-reduced-transparency: reduce) {
+  .gs-pop { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(22, 22, 26, 0.97); }
+  :root[data-theme="light"] .gs-pop { background: rgba(255, 255, 255, 0.98); }
+}
+
+@media (max-width: 560px) {
+  .gs-gis-slot--card { min-width: 0; width: 100%; justify-content: flex-start; }
+  .gs-signin--card { width: 100%; justify-content: center; }
+  .gs-pop-foot { flex-direction: column; align-items: stretch; }
+  .gs-pop-note { text-align: center; }
+}
+
+/* ── Settings › Calendar & Accounts, Google not configured (SPEC-V2 §5.7, v2-themes §5.4):
+   one muted line, no yellow pill, no disabled import buttons, no dead sign-in button. ── */
+html[data-google="off"] #settings-account-root .gs-card {
+  padding: 2px 6px;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+html[data-google="off"] #settings-account-root .gs-card::before,
+html[data-google="off"] #settings-account-root .gs-card > .card-header,
+html[data-google="off"] #settings-account-root .gs-card .gs-card-muted,
+html[data-google="off"] #settings-account-root .gs-card .gs-signin,
+html[data-google="off"] #settings-account-root .gs-card .gs-actions { display: none; }
+html[data-google="off"] #settings-account-root .gs-card-lead {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+/* The status pill is a neutral text label everywhere (no chromatic badge in Settings). */
+.gs-status--off .gs-status-dot { background: var(--text-muted); box-shadow: none; }
+:root[data-theme="light"] .gs-status--off .gs-status-dot { background: var(--text-muted); }

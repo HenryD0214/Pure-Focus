@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Focus session in progress</title>
+<link rel="stylesheet" href="blocked.css">
+</head>
+<body>
+<main class="col">
+  <div class="ring" aria-hidden="true">
+    <svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="54"/><circle class="arc" id="arc" cx="60" cy="60" r="54"/></svg>
+    <span class="time" id="time">--:--</span>
+  </div>
+  <p class="sr" id="live" aria-live="polite"></p>
+  <h1 id="title">This site can wait</h1>
+  <p class="body" id="body">You're in a focus session.</p>
+  <button class="primary" id="back" type="button">Back to focus</button>
+  <div class="pass" id="passWrap">
+    <button class="hold" id="hold" type="button" aria-describedby="passCap">
+      <svg class="hold-ring" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle class="fill" id="holdFill" cx="12" cy="12" r="9"/></svg>
+      <span>I really need this · 5 min</span>
+    </button>
+    <p class="caption" id="passCap">Press and hold for a moment.</p>
+  </div>
+  <p class="caption" id="noPass" hidden>You've used your passes. This tab will reopen when the session ends.</p>
+  <footer>Pure Focus Blocker · only during focus sessions · nothing about your browsing is saved</footer>
+</main>
+<script src="blocked.js"></script>
+</body>
+</html>

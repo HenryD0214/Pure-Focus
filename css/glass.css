@@ -1,0 +1,169 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   glass.css — Liquid Glass for the timer panel and the music bar over a video scene (loads last).
+
+   Built in three layers, because an element with a backdrop-filter becomes a
+   "backdrop root" and anything inside it can no longer see the scene:
+   · the panel itself: no backdrop of its own — just the lift shadow and the shape;
+   · ::before (body): clear glass, a light blur with boosted colour and a thin tint
+     (the tint is --panel-a, so the declutter views stay extra see-through);
+   · ::after (edge): a soft band around the rim that refracts harder (more blur,
+     brighter, richer colour), plus the specular rim: a bright line along the top
+     edge, a glint at the top-left corner and a fainter one at the bottom right.
+   Safari can't bend the image through an SVG filter, so the lensing at the edge is
+   built from that thicker, brighter band — it reads the same and works everywhere.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root body.has-scene #view-focus .timer-card.timer-card,
+:root body.has-scene #view-focus .pf-np.pf-np {
+  --lg-tint: rgba(16, 16, 20, var(--panel-a));
+  --lg-body: blur(4px) saturate(170%) brightness(0.86);
+  --lg-edge: blur(22px) saturate(200%) brightness(1.14) contrast(1.04);
+  --lg-band: 30px;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: 0 24px 60px -18px rgba(0, 0, 0, 0.45), 0 4px 14px rgba(0, 0, 0, 0.16);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+:root[data-theme="light"] body.has-scene #view-focus .timer-card.timer-card,
+:root[data-theme="light"] body.has-scene #view-focus .pf-np.pf-np {
+  --lg-tint: rgba(255, 255, 255, var(--panel-a));
+  /* light: brighten the frame behind the glass, but keep its colours true (no neon rim on a sunset) */
+  --lg-body: blur(6px) saturate(125%) brightness(1.12);
+  --lg-edge: blur(22px) saturate(140%) brightness(1.2) contrast(1.02);
+  box-shadow: 0 24px 60px -18px rgba(0, 0, 0, 0.32), 0 4px 14px rgba(0, 0, 0, 0.1);
+}
+
+/* the body: clear glass */
+:root body.has-scene #view-focus .timer-card.timer-card::before,
+:root body.has-scene #view-focus .pf-np.pf-np::before {
+  content: ""; position: absolute; inset: 0; z-index: -2; border-radius: inherit; pointer-events: none;
+  background: var(--lg-tint);
+  -webkit-backdrop-filter: var(--lg-body); backdrop-filter: var(--lg-body);
+}
+
+/* the edge: a refracting band + the specular rim */
+:root body.has-scene #view-focus .timer-card.timer-card::after,
+:root body.has-scene #view-focus .pf-np.pf-np::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+  -webkit-backdrop-filter: var(--lg-edge); backdrop-filter: var(--lg-edge);
+  background:
+    radial-gradient(140% 55% at 18% 0%, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0) 55%),
+    radial-gradient(120% 45% at 85% 100%, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 55%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0) 70%, rgba(255, 255, 255, 0.06));
+  box-shadow:
+    inset 0 1.5px 0.5px rgba(255, 255, 255, 0.75),
+    inset 1.5px 0 0.5px rgba(255, 255, 255, 0.32),
+    inset -1px 0 0.5px rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0.5px rgba(255, 255, 255, 0.22),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    inset 0 0 18px rgba(255, 255, 255, 0.10);
+  /* keep only the rim: a soft band along each edge */
+  -webkit-mask-image:
+    linear-gradient(90deg, #000, rgba(0, 0, 0, 0.35) calc(var(--lg-band) * .5), transparent var(--lg-band), transparent calc(100% - var(--lg-band)), rgba(0, 0, 0, 0.35) calc(100% - var(--lg-band) * .5), #000),
+    linear-gradient(180deg, #000, rgba(0, 0, 0, 0.35) calc(var(--lg-band) * .5), transparent var(--lg-band), transparent calc(100% - var(--lg-band)), rgba(0, 0, 0, 0.35) calc(100% - var(--lg-band) * .5), #000);
+          mask-image:
+    linear-gradient(90deg, #000, rgba(0, 0, 0, 0.35) calc(var(--lg-band) * .5), transparent var(--lg-band), transparent calc(100% - var(--lg-band)), rgba(0, 0, 0, 0.35) calc(100% - var(--lg-band) * .5), #000),
+    linear-gradient(180deg, #000, rgba(0, 0, 0, 0.35) calc(var(--lg-band) * .5), transparent var(--lg-band), transparent calc(100% - var(--lg-band)), rgba(0, 0, 0, 0.35) calc(100% - var(--lg-band) * .5), #000);
+  -webkit-mask-composite: source-over; mask-composite: add;
+}
+:root[data-theme="light"] body.has-scene #view-focus .timer-card.timer-card::after,
+:root[data-theme="light"] body.has-scene #view-focus .pf-np.pf-np::after {
+  box-shadow:
+    inset 0 1.5px 0.5px rgba(255, 255, 255, 0.95),
+    inset 1.5px 0 0.5px rgba(255, 255, 255, 0.5),
+    inset -1px 0 0.5px rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0.5px rgba(255, 255, 255, 0.4),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.25),
+    inset 0 0 18px rgba(255, 255, 255, 0.18);
+}
+
+/* controls on the glass are glass too: soft capsules with a lit top edge */
+:root body.has-scene #view-focus .timer-card .mode-switch,
+:root body.has-scene #view-focus .timer-card .btn-transport,
+:root body.has-scene #view-focus .timer-card .pf-dock-seg,
+:root body.has-scene #view-focus .timer-card .pf-dock > .scene-dock-btn {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 4px 14px -6px rgba(0, 0, 0, 0.35);
+  -webkit-backdrop-filter: blur(10px) saturate(180%); backdrop-filter: blur(10px) saturate(180%);
+}
+:root[data-theme="light"] body.has-scene #view-focus .timer-card .mode-switch,
+:root[data-theme="light"] body.has-scene #view-focus .timer-card .btn-transport,
+:root[data-theme="light"] body.has-scene #view-focus .timer-card .pf-dock-seg,
+:root[data-theme="light"] body.has-scene #view-focus .timer-card .pf-dock > .scene-dock-btn {
+  background: rgba(255, 255, 255, 0.42);
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 4px 14px -6px rgba(0, 0, 0, 0.18);
+}
+:root body.has-scene #view-focus .timer-card .btn-transport:hover { background: rgba(255, 255, 255, 0.2); }
+:root[data-theme="light"] body.has-scene #view-focus .timer-card .btn-transport:hover { background: rgba(255, 255, 255, 0.62); }
+
+/* the music bar: a thinner rim band for its 64 px height, and a softer lift */
+:root body.has-scene #view-focus .pf-np.pf-np {
+  --lg-band: 16px;
+  box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.45), 0 3px 10px rgba(0, 0, 0, 0.14);
+}
+:root[data-theme="light"] body.has-scene #view-focus .pf-np.pf-np { box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.3), 0 3px 10px rgba(0, 0, 0, 0.08); }
+:root body.has-scene #view-focus .pf-np .pf-np-pp {
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32), 0 4px 14px -6px rgba(0, 0, 0, 0.35);
+  -webkit-backdrop-filter: blur(10px) saturate(180%); backdrop-filter: blur(10px) saturate(180%);
+}
+:root body.has-scene #view-focus .pf-np .pf-np-pp:hover { background: rgba(255, 255, 255, 0.26); }
+:root[data-theme="light"] body.has-scene #view-focus .pf-np .pf-np-pp { background: rgba(255, 255, 255, 0.6); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 4px 14px -6px rgba(0, 0, 0, 0.18); }
+/* the art tile catches the light too */
+:root body.has-scene #view-focus .pf-np .pf-art { box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, 0.3), 0 4px 12px -4px rgba(0, 0, 0, 0.4); }
+
+/* The music bar carries words, so its glass frosts more than the timer's: more blur and a deeper tint
+   behind the title and artist, so they read over any frame. */
+:root body.has-scene #view-focus .pf-np.pf-np { --panel-a: .5; --lg-body: blur(18px) saturate(160%) brightness(.78); }
+:root[data-theme="light"] body.has-scene #view-focus .pf-np.pf-np { --panel-a: .66; --lg-body: blur(18px) saturate(130%) brightness(1.1); }
+:root body.has-scene #view-focus .pf-np .pf-l1 { color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); }
+:root body.has-scene #view-focus .pf-np .pf-l2 { color: rgba(255, 255, 255, 0.84); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); }
+:root[data-theme="light"] body.has-scene #view-focus .pf-np .pf-l1 { color: #141418; text-shadow: none; }
+:root[data-theme="light"] body.has-scene #view-focus .pf-np .pf-l2 { color: rgba(20, 20, 24, 0.72); text-shadow: none; }
+
+/* ═══════════  Light over a dark scene (html.scene-adapt — js/settings.js)  ═══════════
+   The Focus page borrows the dark words and controls, and its glass turns clear: a whisper of
+   white, a strong blur and a bright rim, so the panels melt into the picture instead of sitting on
+   it as white slabs. (The rest of the app stays light.) */
+:root.scene-adapt body.has-scene .sidebar {
+  background: rgba(255, 255, 255, 0.07);
+  border-right-color: rgba(255, 255, 255, 0.12);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.04);
+  /* a touch darker behind the glass, so the words read over a bright patch of the picture */
+  -webkit-backdrop-filter: blur(36px) saturate(170%) brightness(0.78); backdrop-filter: blur(36px) saturate(170%) brightness(0.78);
+}
+:root.scene-adapt body.has-scene .sidebar .sb-item.is-active { background: rgba(255, 255, 255, 0.15); color: #fff; }
+:root.scene-adapt body.has-scene .sidebar .sb-item:not(.is-active):hover { background: rgba(255, 255, 255, 0.08); }
+:root.scene-adapt body.has-scene .sidebar .sb-item.is-active .sb-ic { color: #fff; }
+:root.scene-adapt body.has-scene .pf-sg { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.13); }
+:root.scene-adapt body.has-scene .pf-sg:hover { background: rgba(255, 255, 255, 0.13); }
+
+:root.scene-adapt body.has-scene #view-focus .focus-grid > .tasks-card {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.05));
+  border-color: rgba(255, 255, 255, 0.17);
+  box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  -webkit-backdrop-filter: blur(40px) saturate(170%) brightness(0.82); backdrop-filter: blur(40px) saturate(170%) brightness(0.82);
+}
+:root.scene-adapt body.has-scene #view-focus .tasks-card::before { background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0) 30%); }
+:root.scene-adapt body.has-scene .tk-add { background: rgba(255, 255, 255, 0.08); }
+:root.scene-adapt body.has-scene .tk-row.task-row.is-active { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.18); }
+:root.scene-adapt body.has-scene .tasks-head-chips .pf-hud,
+:root.scene-adapt body.has-scene .tasks-head-chips .guard-chip { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.16); }
+
+/* the timer panel and the music bar keep the smoky Liquid Glass of dark mode: their words sit right
+   over the busiest, brightest part of most scenes */
+
+/* the round corner buttons */
+:root.scene-adapt body.has-scene .focus-corner .corner-btn,
+:root.scene-adapt body.has-scene .focus-corner .declutter-btn,
+:root.scene-adapt body.has-scene .sb-open {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 8px 24px -14px rgba(0, 0, 0, 0.6);
+  -webkit-backdrop-filter: blur(24px) saturate(170%); backdrop-filter: blur(24px) saturate(170%);
+}
+:root.scene-adapt body.has-scene .focus-corner .corner-btn:hover,
+:root.scene-adapt body.has-scene .focus-corner .declutter-btn:hover,
+:root.scene-adapt body.has-scene .sb-open:hover { background: rgba(255, 255, 255, 0.2); }

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pure Focus Blocker</title>
+<style>
+  :root { color-scheme: light dark; --fg: #1b1b1d; --muted: #5d5d63; --line: rgba(0,0,0,.1); --chip: rgba(0,0,0,.06); --focus: #E8482B; }
+  @media (prefers-color-scheme: dark) { :root { --fg: #f4f4f5; --muted: #a1a1aa; --line: rgba(255,255,255,.12); --chip: rgba(255,255,255,.08); } body { background: #161618; } }
+  body { width: 320px; margin: 0; padding: 14px 16px; font: 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--fg); }
+  .head { display: flex; align-items: center; gap: 10px; }
+  .head svg { width: 28px; height: 28px; flex: none; transform: rotate(-90deg); }
+  .head circle { fill: none; stroke-width: 3; }
+  .status { font-weight: 600; }
+  .row { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+  .row:first-of-type { margin-top: 12px; }
+  .muted { color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 0; border-top: 1px solid var(--line); }
+  .chip { padding: 2px 8px; border-radius: 10px; background: var(--chip); font-size: 12px; }
+  .links { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid var(--line); }
+  a, button.link { color: var(--focus); text-decoration: none; background: none; border: 0; padding: 0; font: inherit; cursor: pointer; text-align: left; }
+  a:hover, button.link:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+  <div class="head">
+    <svg viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="11" stroke="var(--line)"/><circle id="arc" cx="14" cy="14" r="11" stroke="var(--focus)" stroke-linecap="round" stroke-dasharray="0 69.1"/></svg>
+    <div><div class="status" id="status">Checking…</div><div class="muted" id="sub"></div></div>
+  </div>
+  <div class="row"><span>Mac app</span><span class="muted" id="mac">…</span></div>
+  <div class="row"><span>Web app</span><span class="muted" id="web">…</span></div>
+  <div class="row"><span>Passes left</span><span class="muted" id="passes">—</span></div>
+  <div class="chips" id="chips" aria-label="Sites blocked during this session"></div>
+  <div class="links">
+    <a id="edit" href="#">Edit your list in Pure Focus</a>
+    <button class="link" id="connect" type="button" hidden>Connect this site</button>
+  </div>
+<script src="popup.js"></script>
+</body>
+</html>

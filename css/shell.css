@@ -1,0 +1,547 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   shell.css — the app frame (js/shell.js flips the classes). Loads after calm.css.
+
+   · A sidebar on the left: Focus · Calendar · Reports, then today's goal, Settings and the
+     account at the bottom. Its toggle folds it away (html.sb-collapsed); at phone width it is
+     a drawer (html.sb-drawer-open) over a scrim.
+   · The Focus page: the timer panel and the music bar under it in the middle; Today's Tasks
+     as a full-height panel on the right that folds away (html.tasks-collapsed); Background,
+     Declutter (and Tasks, while folded) as round buttons in the top-right corner.
+   · Narrow windows stack the tasks under the timer (by the page's own width, so a folded
+     sidebar counts).
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --sb-w: 244px;
+  --topbar-h: 0px;           /* no top bar any more: sticky things sit at the top edge */
+  --shell-ease: cubic-bezier(.2, .8, .2, 1);
+  --shell-dur: .32s;
+}
+
+/* ───────────────────────────  sidebar  ─────────────────────────── */
+
+.sidebar {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 40;
+  width: var(--sb-w);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 12px 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  background: rgba(15, 15, 18, 0.58);
+  border-right: 1px solid var(--hairline);
+  -webkit-backdrop-filter: blur(24px) saturate(150%); backdrop-filter: blur(24px) saturate(150%);
+  transition: opacity var(--dur-quick) var(--ease-quick);
+}
+.shell-ready .sidebar {
+  transition: transform var(--shell-dur) var(--shell-ease), visibility 0s, opacity var(--dur-quick) var(--ease-quick);
+}
+html.sb-collapsed .sidebar,
+:root[data-declutter] .sidebar {
+  transform: translateX(calc(-100% - 2px));
+  visibility: hidden;
+}
+.shell-ready.sb-collapsed .sidebar,
+.shell-ready[data-declutter] .sidebar {
+  transition: transform var(--shell-dur) var(--shell-ease), visibility 0s linear var(--shell-dur);
+}
+
+.sb-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 0 0 8px;
+  margin-bottom: 14px;
+}
+.sidebar .brand { min-height: 36px; }
+.sidebar .brand-name { display: inline; }
+
+.sb-toggle, .sb-open {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  width: 36px; height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background var(--dur-quick) var(--ease-quick), color var(--dur-quick) var(--ease-quick), transform .14s;
+}
+.sb-toggle svg, .sb-open svg { width: 20px; height: 20px; }
+.sb-toggle:hover { background: rgba(255, 255, 255, 0.07); color: var(--text-primary); }
+.sb-toggle:active, .sb-open:active { transform: scale(.94); }
+.sb-toggle:focus-visible, .sb-open:focus-visible { outline: 2px solid var(--focus-tint); outline-offset: 2px; }
+
+/* the sections */
+.sb-nav { display: flex; flex-direction: column; gap: 2px; }
+.sidebar .sb-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 560;
+  letter-spacing: -0.005em;
+  text-align: left;
+  color: var(--text-secondary);
+  background: transparent;
+}
+.sidebar .sb-item:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.06); }
+.sidebar .sb-item.is-active {
+  color: var(--text-primary);
+  font-weight: 620;
+  background: color-mix(in srgb, var(--tint) 16%, rgba(255, 255, 255, 0.04));
+}
+.sb-ic { width: 19px; height: 19px; flex: none; }
+.sidebar .sb-item.is-active .sb-ic { color: var(--tint-text); }
+.sidebar .sb-item:focus-visible { outline: 2px solid var(--focus-tint); outline-offset: -2px; }
+
+.sb-fill { flex: 1 1 auto; min-height: 18px; }
+
+/* today's goal (js/rewards.js) */
+#side-goal-root { margin: 0 0 8px; }
+#side-goal-root:empty { display: none; }
+.pf-sg {
+  appearance: none;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 12px 10px;
+  border-radius: 16px;
+  border: 1px solid var(--hairline);
+  background: rgba(255, 255, 255, 0.045);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-quick) var(--ease-quick);
+}
+.pf-sg:hover { background: rgba(255, 255, 255, 0.08); }
+.pf-sg:focus-visible { outline: 2px solid var(--focus-tint); outline-offset: 2px; }
+.pf-sg-goal { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.pf-sg-ringwrap { position: relative; display: grid; place-items: center; width: 34px; height: 34px; flex: none; }
+.pf-sg-ring { width: 34px; height: 34px; }
+.pf-sg-check { position: absolute; inset: 0; margin: auto; width: 16px; height: 16px; color: var(--focus-tint); transition: opacity var(--dur-quick) var(--ease-quick); }
+.pf-sg-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.pf-sg-big { font-size: 15px; font-weight: 650; letter-spacing: -0.01em; color: var(--text-primary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pf-sg-sub { font-size: 12px; color: var(--text-secondary); }
+.pf-sg-quests {
+  display: flex; align-items: center; gap: 8px;
+  padding-top: 9px;
+  border-top: 1px solid var(--hairline);
+  font-size: 12.5px; font-weight: 560; color: var(--text-secondary);
+}
+.pf-sg-quests[hidden] { display: none; }
+.pf-sg-dots { display: inline-flex; gap: 4px; }
+.pf-sg-dots i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .3; }
+.pf-sg-dots i.is-done { background: var(--focus-tint); opacity: 1; }
+.pf-sg-qcount { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.pf-sg-chev { margin-left: auto; font-size: 17px; line-height: 1; color: var(--text-muted); }
+
+/* Settings and the account row at the very bottom */
+.sidebar .sb-settings { flex: none; }
+.sb-account { flex: none; }
+.sb-account:empty { display: none; }
+.gs-acct-text, .gs-acct-more { display: none; }
+.sidebar .gs-avatar-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 48px;
+  padding: 0 10px 0 7px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+}
+.sidebar .gs-avatar-btn:hover,
+.sidebar .gs-avatar-btn[aria-expanded="true"] { background: rgba(255, 255, 255, 0.06); box-shadow: none; }
+.sidebar .gs-avatar-btn:active { transform: none; }
+.sidebar .gs-avatar-btn:focus-visible { outline: 2px solid var(--focus-tint); outline-offset: -2px; }
+.sidebar .gs-avatar { flex: none; }
+.sidebar .gs-avatar-btn.is-busy::after { inset: auto; left: 4px; top: 6px; width: 36px; height: 36px; }
+.sidebar .gs-acct-text { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
+.gs-acct-name, .gs-acct-sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gs-acct-name { font-size: 13.5px; font-weight: 620; letter-spacing: -0.005em; }
+.gs-acct-sub { font-size: 12px; color: var(--text-secondary); }
+.sidebar .gs-acct-more { display: inline-flex; gap: 2.5px; flex: none; padding: 0 2px; color: var(--text-muted); }
+.gs-acct-more i { width: 3.5px; height: 3.5px; border-radius: 50%; background: currentColor; }
+.sidebar .gs-avatar-btn:hover .gs-acct-more { color: var(--text-secondary); }
+
+/* the button that brings a folded sidebar back (and opens the drawer on phones) */
+.sb-open {
+  position: fixed;
+  top: 16px; left: 16px;
+  z-index: 38;
+  display: none;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--pf-chip-border, var(--hairline));
+  background: var(--pf-chip-bg, rgba(255, 255, 255, 0.075));
+  color: var(--text-primary);
+  -webkit-backdrop-filter: blur(20px) saturate(150%); backdrop-filter: blur(20px) saturate(150%);
+  box-shadow: 0 8px 24px -14px rgba(0, 0, 0, .6);
+}
+.sb-open svg { width: 19px; height: 19px; }
+.sb-open:hover { background: color-mix(in srgb, var(--pf-chip-bg, transparent) 60%, var(--pf-hover, rgba(255,255,255,.09))); }
+:root:not([data-theme="light"]) body.has-scene .sb-open {
+  background: linear-gradient(180deg, rgba(22, 22, 26, 0.5), rgba(10, 10, 12, 0.6));
+  border-color: rgba(255, 255, 255, 0.13);
+}
+html.sb-collapsed:not([data-declutter]) .sb-open { display: grid; }
+
+.sb-scrim { display: none; }
+
+/* ───────────────────────────  the page beside it  ─────────────────────────── */
+
+.view { margin-left: var(--sb-w); }
+.shell-ready .view { transition: margin-left var(--shell-dur) var(--shell-ease); }
+html.sb-collapsed .view,
+:root[data-declutter] .view { margin-left: 0; }
+/* with the sidebar folded, the pages leave room for the button that brings it back */
+html.sb-collapsed .view:not(#view-focus) { padding-top: 70px; }
+
+/* quiet focus: the sidebar steps back like the old top bar did */
+body.is-quiet.is-idle .sidebar { opacity: 0.4; transition: opacity var(--dur-smooth) var(--ease-smooth); }
+body.is-quiet .sidebar:is(:hover, :focus-within, :has([aria-expanded="true"]:not(.sb-toggle))) { opacity: 1; }
+body.is-quiet.is-idle .focus-corner, body.is-quiet.is-idle .sb-open { opacity: 0.55; transition: opacity var(--dur-smooth) var(--ease-smooth); }
+body.is-quiet .focus-corner:hover, body.is-quiet .focus-corner:focus-within { opacity: 1; }
+
+/* ───────────────────────────  Calendar · Reports · Settings  ───────────────────────────
+   One solid page beside the sidebar, like a document app: the scene and the aurora belong to the
+   Focus page, so nothing here floats on a blurred or grey backdrop. Cards are flat — a hairline,
+   no lift — and the Calendar fills the page edge to edge. */
+:root { --main-bg: color-mix(in srgb, var(--page) 55%, #161618); }
+:root[data-theme="light"] { --main-bg: #fcfcfb; }
+html:root:not([data-view="focus"]) body,
+html:root:not([data-view="focus"]) body.has-scene { background: var(--main-bg); }
+html:not([data-view="focus"]) #scene-root,
+html:not([data-view="focus"]) .aurora { visibility: hidden; opacity: 0; }
+
+html:root:not([data-view="focus"]) body .view:not(#view-focus) .glass {
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  box-shadow: none;
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+html:root:not([data-view="focus"]) body .view:not(#view-focus) .glass::before { display: none; }
+html:root[data-theme="light"]:not([data-view="focus"]) body .view:not(#view-focus) .glass,
+html:root[data-theme="light"]:not([data-view="focus"]) body.has-scene .view:not(#view-focus) .glass {
+  background: #fff;
+  border-color: rgba(17, 17, 24, 0.08);
+  box-shadow: 0 1px 2px rgba(17, 17, 24, 0.03);
+}
+/* the sidebar against a solid page: its own quiet tone and a hairline */
+html:root:not([data-view="focus"]) body .sidebar {
+  background: color-mix(in srgb, var(--main-bg) 82%, #000);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+html:root[data-theme="light"]:not([data-view="focus"]) body .sidebar,
+html:root[data-theme="light"]:not([data-view="focus"]) body.has-scene .sidebar {
+  background: #f3f3f1;
+  border-right-color: rgba(17, 17, 24, 0.07);
+}
+
+/* the Calendar fills the page: no outer card, no margin */
+#view-calendar { padding: 0; }
+html:root:not([data-view="focus"]) body #view-calendar .cal-wrap.glass,
+html:root:not([data-view="focus"]) body.has-scene #view-calendar .cal-wrap.glass {
+  max-width: none;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+/* with the sidebar folded, its button sits at the start of the calendar's header */
+html.sb-collapsed .view#view-calendar { padding-top: 0; }
+html.sb-collapsed #view-calendar .cal-header { padding-left: 62px; }
+html.sb-collapsed[data-view="calendar"] .sb-open { top: 8px; left: 12px; }
+
+/* ───────────────────────────  Focus page  ─────────────────────────── */
+
+#view-focus {
+  padding: 0;
+  container: focus / inline-size;
+  overflow-x: clip;
+}
+#view-focus .focus-grid {
+  --tasks-w: clamp(320px, 33cqi, 420px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--tasks-w);
+  column-gap: 20px;
+  align-items: start;
+  max-width: none;
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 0 20px 0 24px;
+}
+.shell-ready #view-focus .focus-grid { transition: grid-template-columns var(--shell-dur) var(--shell-ease), column-gap var(--shell-dur) var(--shell-ease); }
+html.tasks-collapsed #view-focus .focus-grid,
+:root[data-declutter="2"] #view-focus .focus-grid,
+:root[data-declutter="3"] #view-focus .focus-grid { grid-template-columns: minmax(0, 1fr) 0px; column-gap: 0; }
+
+/* the middle: timer panel, then the music bar — centred in the window's height */
+.focus-center {
+  container: stage / inline-size;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-width: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 68px 0 24px;
+}
+.focus-center > .timer-card { width: 100%; max-width: 480px; }
+.focus-center > .stage-dock { width: 100%; max-width: 440px; }
+#view-focus .ring-wrap { --ring: clamp(180px, min(66cqi, 40vh), 312px); }
+/* short windows: a smaller ring so the music bar stays on screen */
+@media (max-height: 760px) { #view-focus .ring-wrap { --ring: clamp(180px, min(66cqi, 36vh), 290px); } }
+/* older browsers: an unknown cqi would collapse the ring to nothing */
+@supports not (width: 1cqi) {
+  #view-focus .ring-wrap { --ring: clamp(180px, min(50vw, 40vh), 312px); }
+}
+
+/* Today's Tasks: a full-height panel on the right, below the corner buttons */
+#view-focus .focus-grid > .tasks-card {
+  position: sticky;
+  top: 72px;
+  width: var(--tasks-w);
+  max-width: none;
+  height: calc(100vh - 92px);
+  height: calc(100dvh - 92px);
+  margin-top: 72px;
+  padding: 18px 16px 14px;
+  border-radius: 26px;
+  overflow: hidden;
+}
+.shell-ready #view-focus .focus-grid > .tasks-card {
+  transition: opacity var(--shell-dur) var(--shell-ease), transform var(--shell-dur) var(--shell-ease), visibility 0s;
+}
+html.tasks-collapsed #view-focus .focus-grid > .tasks-card {
+  opacity: 0; transform: translateX(32px); visibility: hidden; pointer-events: none;
+}
+.shell-ready.tasks-collapsed #view-focus .focus-grid > .tasks-card {
+  transition: opacity var(--shell-dur) var(--shell-ease), transform var(--shell-dur) var(--shell-ease), visibility 0s linear var(--shell-dur);
+}
+/* inside: header, the list (scrolls), then the add field at the bottom (templates open above it) */
+#view-focus .tasks-card > .card-header { order: 0; flex: none; margin-bottom: 10px; padding-right: 0; }
+#view-focus .tasks-card > #upnext-root { order: 0; }
+#view-focus .tasks-card > .tasks-body {
+  order: 2;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: 0 -8px;
+  padding: 0 8px 8px;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--text-muted) 40%, transparent) transparent;
+}
+#view-focus .tasks-card > .templates { order: 3; margin: 8px 0 0; }
+#view-focus .tasks-card > .tk-add { order: 4; flex: none; margin: 10px 0 0; }
+/* header: "Today's Tasks · 3 … ≈ 1h 30m · done by 3:10 PM  [hide]", then the streak and Focus Guard chips */
+#view-focus .tasks-card .card-icon { display: none; }
+#view-focus .tasks-card > .card-header { position: relative; column-gap: 8px; padding-right: 0; }
+#view-focus .tasks-card > .card-header .card-title { font-size: 15.5px; }
+#view-focus .tasks-card > .card-header::after { content: ""; order: 10; flex-basis: 100%; height: 0; }
+#view-focus .tasks-card .tasks-head-chips { order: 11; flex-basis: auto; flex-wrap: wrap; row-gap: 6px; margin: 6px 0 0; }
+#view-focus .tasks-card #tasks-estimate { order: 0; flex: 0 1 auto; min-width: 0; margin: 0 36px 0 0; padding: 0; overflow: hidden; text-overflow: ellipsis; }
+/* …and with no estimate, the title row still keeps clear of the hide button */
+#view-focus .tasks-card > .card-header:has(#tasks-estimate[hidden]) .header-spacer { min-width: 36px; }
+.tasks-collapse { flex: none; color: var(--text-secondary); }
+/* the hide button keeps the top-right corner however the header wraps */
+#view-focus .tasks-card .tasks-collapse { position: absolute; top: -3px; right: -4px; }
+.tasks-collapse svg { width: 19px; height: 19px; }
+.tasks-collapse:hover { color: var(--text-primary); }
+
+/* ── the top-right corner: [Tasks] [Background] [Declutter] ── */
+.focus-corner {
+  position: fixed;
+  top: 16px; right: 20px;
+  z-index: 45;
+  display: none;
+  align-items: center;
+  gap: 8px;
+  transition: opacity var(--dur-quick) var(--ease-quick);
+}
+html[data-view="focus"] .focus-corner { display: flex; }
+.focus-corner > div:empty { display: none; }
+.focus-corner .declutter-btn { display: inline-flex; position: relative; top: auto; right: auto; width: 40px; height: 40px; }
+/* the declutter label drops below the button, so it never covers its neighbours */
+.focus-corner .dc-label { right: 0; top: calc(100% + 8px); transform: translateY(-4px); }
+.focus-corner .declutter-btn:hover .dc-label,
+.focus-corner .declutter-btn:focus-visible .dc-label,
+.focus-corner .declutter-btn.is-flash .dc-label { transform: none; }
+
+.corner-btn {
+  appearance: none;
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 40px; height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--pf-chip-border, var(--hairline));
+  background: var(--pf-chip-bg, rgba(255, 255, 255, 0.075));
+  -webkit-backdrop-filter: blur(20px) saturate(150%); backdrop-filter: blur(20px) saturate(150%);
+  box-shadow: 0 8px 24px -14px rgba(0, 0, 0, .6);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background var(--dur-quick) var(--ease-quick), transform var(--dur-quick) var(--ease-quick);
+}
+.corner-btn[hidden] { display: none; }
+.corner-btn svg { width: 19px; height: 19px; }
+.corner-btn:hover { background: color-mix(in srgb, var(--pf-chip-bg, transparent) 60%, var(--pf-hover, rgba(255,255,255,.09))); }
+.corner-btn:active { transform: scale(.94); }
+.corner-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+:root:not([data-theme="light"]) body.has-scene .corner-btn {
+  background: linear-gradient(180deg, rgba(22, 22, 26, 0.5), rgba(10, 10, 12, 0.6));
+  border-color: rgba(255, 255, 255, 0.13);
+}
+/* Background: the scene button as a round icon (its tooltip names the scene) */
+.focus-corner .scene-dock-btn.corner-btn { gap: 0; }
+.focus-corner .scene-dock-btn .pf-dock-k,
+.focus-corner .scene-dock-btn .pf-dock-v,
+.focus-corner .scene-dock-btn .pf-dock-chev { display: none; }
+.focus-corner .scene-dock-btn .pf-dock-ic { width: 19px; height: 19px; color: var(--text-primary); }
+.focus-corner .scene-dock-btn[aria-expanded="true"] { background: color-mix(in srgb, var(--pf-chip-bg, transparent) 50%, var(--pf-hover, rgba(255,255,255,.12))); }
+/* the open-task count rides on the Tasks button */
+.corner-count {
+  position: absolute; top: -3px; right: -3px;
+  min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 9px;
+  display: grid; place-items: center;
+  background: var(--accent); color: var(--on-accent, #fff);
+  font-size: 10.5px; font-weight: 700; font-variant-numeric: tabular-nums;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, .25);
+}
+.corner-count[hidden] { display: none; }
+
+/* declutter: the corner keeps only its own button */
+.focus-corner > * { transition: opacity var(--dur-smooth) var(--ease-smooth), visibility 0s; }
+:root[data-declutter] .focus-corner > :not(.declutter-btn) {
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity var(--dur-smooth) var(--ease-smooth), visibility 0s linear var(--dur-smooth);
+}
+
+/* ── narrow pages: the tasks go back under the timer ── */
+@container focus (max-width: 720px) {
+  #view-focus .focus-grid,
+  html.tasks-collapsed #view-focus .focus-grid {
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: 0;
+    padding: 0 16px 24px;
+  }
+  .focus-center { min-height: 0; padding: 72px 0 8px; justify-content: flex-start; }
+  #view-focus .focus-grid > .tasks-card {
+    position: relative;
+    top: auto;
+    justify-self: center;
+    width: 100%;
+    max-width: 640px;
+    height: auto;
+    max-height: none;
+    margin-top: 18px;
+  }
+  #view-focus .tasks-card > .tasks-body { max-height: 46vh; }
+  #view-focus .tasks-card .card-icon { display: grid; }
+  html.tasks-collapsed #view-focus .focus-grid > .tasks-card { display: none; }
+}
+
+/* ───────────────────────────  phones: the sidebar is a drawer  ─────────────────────────── */
+@media (max-width: 760px) {
+  .view, html.sb-collapsed .view { margin-left: 0; }
+  .view:not(#view-focus) { padding-top: 70px; }
+  .sidebar {
+    z-index: 70;
+    width: min(300px, 86vw);
+    transform: translateX(calc(-100% - 2px));
+    visibility: hidden;
+    background: rgba(18, 18, 22, 0.88);
+    box-shadow: 24px 0 60px -20px rgba(0, 0, 0, .5);
+  }
+  :root[data-theme="light"] .sidebar,
+  :root[data-theme="light"] body.has-scene .sidebar { background: rgba(255, 255, 255, 0.92); }
+  .shell-ready .sidebar { transition: transform var(--shell-dur) var(--shell-ease), visibility 0s linear var(--shell-dur); }
+  html.sb-drawer-open .sidebar { transform: none; visibility: visible; }
+  .shell-ready.sb-drawer-open .sidebar { transition: transform var(--shell-dur) var(--shell-ease), visibility 0s; }
+  .sb-open, html.sb-collapsed .sb-open { display: grid; top: 14px; left: 14px; }
+  :root[data-declutter] .sb-open { display: none; }
+  html.sb-drawer-open .sb-open { visibility: hidden; }
+  .sb-scrim {
+    display: block;
+    position: fixed; inset: 0; z-index: 69;
+    background: rgba(0, 0, 0, .42);
+    opacity: 0; visibility: hidden;
+    transition: opacity var(--shell-dur) var(--shell-ease), visibility 0s linear var(--shell-dur);
+  }
+  html.sb-drawer-open .sb-scrim { opacity: 1; visibility: visible; transition: opacity var(--shell-dur) var(--shell-ease), visibility 0s; }
+  .focus-corner { top: 14px; right: 14px; }
+  .corner-btn, .focus-corner .declutter-btn { width: 38px; height: 38px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell-ready .sidebar, .shell-ready .view, .shell-ready #view-focus .focus-grid,
+  .shell-ready #view-focus .focus-grid > .tasks-card { transition-duration: 0s !important; }
+}
+body.reduce-motion .sidebar, body.reduce-motion .view, body.reduce-motion #view-focus .focus-grid,
+body.reduce-motion #view-focus .focus-grid > .tasks-card { transition-duration: 0s !important; }
+
+/* Reports › Breakdown: the four-way switch drops under the title rather than pushing the page sideways */
+#view-reports .card-header:has(.rep-dim) { flex-wrap: wrap; row-gap: 8px; }
+.rep-dim { max-width: 100%; }
+@media (max-width: 480px) {
+  .rep-dim { width: 100%; }
+  .rep-dim .seg-btn { flex: 1 1 auto; padding-left: 8px; padding-right: 8px; font-size: 12.5px; white-space: nowrap; }
+}
+
+/* the progress popover lives on <body>, so the tasks panel can't clip it (js/rewards.js places it) */
+body > .pf-hud-pop {
+  position: fixed; top: 12px; left: 12px; right: auto; bottom: auto; z-index: 90;
+  max-height: calc(100vh - 24px); overflow-y: auto; overscroll-behavior: contain;
+  outline: none; transform-origin: top left;
+}
+@media (max-width: 700px) {
+  body > .pf-hud-pop {
+    top: auto; bottom: max(12px, env(safe-area-inset-bottom)); left: 12px; right: 12px;
+    width: auto; max-width: 440px; margin: 0 auto;
+    transform-origin: bottom center; animation: pf-sheet-up .18s cubic-bezier(.16, 1, .3, 1);
+  }
+}
+
+/* iOS zooms the whole page into any field under 16px, and stays zoomed */
+@media (pointer: coarse) {
+  /* small on screen on purpose: fingers get a bigger target without the page looking any busier */
+  .ring-task, .tk-pomos-btn { position: relative; }
+  .ring-task::after, .tk-pomos-btn::after { content: ''; position: absolute; inset: -8px -6px; }
+  .tk-add .add-task-input, .add-task-input, .text-input, .select, .num-input, .tk-title-input, .tk-menu-new, .cal-quick-add { font-size: 16px; }
+}
+
+/* browsers without color-mix(): every use holds a var(), so a plain fallback line can't help */
+@supports not (color: color-mix(in srgb, red, blue)) {
+  :root { --main-bg: var(--page); }
+  .ring-track { stroke: rgba(255, 255, 255, 0.14); }
+  :root[data-theme="light"] .ring-track { stroke: rgba(0, 0, 0, 0.12); }
+  .sidebar .sb-item.is-active, .tk-row.is-active { background: rgba(255, 255, 255, 0.08); }
+  :root[data-theme="light"] .sidebar .sb-item.is-active, :root[data-theme="light"] .tk-row.is-active { background: rgba(0, 0, 0, 0.06); }
+}

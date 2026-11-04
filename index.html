@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+  /* Legacy app links (index.html#reports etc.) now live in app.html. */
+  (function () {
+    var h = location.hash;
+    if (/^#(focus|reports|settings|calendar|signin)$/.test(h)) location.replace('app.html' + h);
+    document.documentElement.classList.add('js');
+    /* If home.js never runs, never leave reveal content hidden. */
+    setTimeout(function () { if (typeof Home === 'undefined') document.documentElement.classList.remove('js'); }, 2500);
+  })();
+</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pure Focus — A beautiful Pomodoro timer</title>
+<meta name="description" content="Pure Focus is a free Pomodoro timer that makes it easy to start working and stay there. Calming scenes, focus music, your assignments and calendar, and a clear picture of when you focus best.">
+<meta name="theme-color" content="#07070a">
+<meta name="color-scheme" content="dark">
+<meta name="referrer" content="no-referrer-when-downgrade">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Pure Focus — A beautiful Pomodoro timer">
+<meta property="og:description" content="A free Pomodoro timer with calming scenes, focus music, your calendar and tasks, and a Focus Fingerprint that shows when you focus best. Sync across your devices.">
+<meta property="og:image" content="https://assets.mixkit.co/videos/5036/5036-thumb-720-0.jpg">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='11' fill='none' stroke='%23e8482b' stroke-width='4' stroke-linecap='round' stroke-dasharray='50 20' transform='rotate(-90 16 16)'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://assets.mixkit.co" crossorigin>
+<link rel="preload" as="image" href="https://assets.mixkit.co/videos/5036/5036-thumb-720-0.jpg" fetchpriority="high">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap">
+<script>/* Early paint (v2-themes §8.1.3): the visitor's theme before the CSS paints. The homepage is always dark. */
+try{var d=JSON.parse(localStorage.getItem('purefocus.v1')||'{}').settings||{};document.documentElement.dataset.pfTheme=d.themeID||'ember';}catch(e){document.documentElement.dataset.pfTheme='ember';}document.documentElement.dataset.theme='dark';</script>
+<link rel="stylesheet" href="css/themes.css?v=10302145">
+<link rel="stylesheet" href="home.css?v=10311400">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div class="aurora" aria-hidden="true">
+  <span class="blob blob-1"></span>
+  <span class="blob blob-2"></span>
+  <span class="blob blob-3"></span>
+</div>
+
+<!-- ─────────────────────────  NAV  ───────────────────────── -->
+<header class="nav" id="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="#top" aria-label="Pure Focus — back to top">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="11" fill="none" stroke="currentColor" stroke-opacity=".28" stroke-width="3.5"/>
+        <circle cx="16" cy="16" r="11" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="52 17.2" transform="rotate(-90 16 16)"/>
+        <circle cx="5" cy="15.8" r="2.7" fill="#fff"/>
+        <circle cx="16" cy="16" r="2.3" fill="currentColor"/>
+      </svg>
+      <span class="brand-name">Pure Focus</span>
+    </a>
+    <nav class="nav-links" aria-label="Homepage sections">
+      <a href="#features">Features</a>
+      <a href="#schedule">Calendar</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a class="btn btn-primary btn-sm nav-cta" href="app.html" data-returning="Continue to your timer">Open the app</a>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ─────────────────────────  HERO  ───────────────────────── -->
+  <section class="hero" id="top" aria-labelledby="hero-title">
+    <div class="hero-media" aria-hidden="true">
+      <img class="hero-poster" id="hero-poster" src="https://assets.mixkit.co/videos/5036/5036-thumb-720-0.jpg" alt="" fetchpriority="high" decoding="async">
+      <video class="hero-video" id="hero-video" muted loop playsinline preload="none" disableremoteplayback
+             poster="https://assets.mixkit.co/videos/5036/5036-thumb-720-0.jpg"></video>
+      <span class="hero-scrim"></span>
+    </div>
+
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <a class="resume-pill" id="resume-pill" href="app.html" hidden>
+          <span class="live-dot" aria-hidden="true"></span>
+          <span>Your <span id="resume-mode">focus session</span> is running — <strong id="resume-left">0:00</strong> left</span>
+          <span class="resume-go" aria-hidden="true">→</span>
+        </a>
+        <p class="eyebrow">Pomodoro timer · Tasks · Calendar · Music</p>
+        <h1 id="hero-title">Make focus your <span class="grad">favorite part</span> of the day.</h1>
+        <p class="lead hero-lead">Start a session in one click. Pure Focus gives you a calm timer, your to-dos and your calendar in one place, with music and scenes that help you settle in. Free to start, private by design, synced across your devices.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary btn-lg" href="app.html">Start focusing — it's free
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11m-4.5-4.5L15 10l-4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a class="btn btn-glass btn-lg" href="#how">See how it works</a>
+        </div>
+        <p class="micro">Free to start · Syncs across your devices · Private by design</p>
+      </div>
+
+      <!-- Live ring demo: a real countdown, not a picture. -->
+      <div class="demo glass glass-blur" id="demo" data-mode="focus" role="group" aria-label="Live timer demo">
+        <div class="demo-head">
+          <span class="demo-badge"><span class="live-dot" aria-hidden="true"></span>Live demo</span>
+          <div class="mode-chips" role="radiogroup" aria-label="Timer mode">
+            <button type="button" class="mode-chip is-active" role="radio" aria-checked="true" data-mode="focus">Focus</button>
+            <button type="button" class="mode-chip" role="radio" aria-checked="false" data-mode="shortBreak">Short</button>
+            <button type="button" class="mode-chip" role="radio" aria-checked="false" data-mode="longBreak">Long</button>
+          </div>
+        </div>
+
+        <div class="demo-ring">
+          <svg viewBox="0 0 280 280" aria-hidden="true">
+            <circle class="ring-track" cx="140" cy="140" r="124" fill="none" stroke-width="14"/>
+            <circle class="ring-arc" id="demo-arc" cx="140" cy="140" r="124" fill="none" stroke-width="14" stroke-linecap="round" transform="rotate(-90 140 140)"/>
+            <circle class="ring-head" id="demo-head" cx="140" cy="16" r="6.5"/>
+          </svg>
+          <div class="ring-center">
+            <span class="ring-mode" id="demo-mode">Focus</span>
+            <span class="ring-time" id="demo-time" role="timer" aria-label="Time left">18:42</span>
+            <span class="ring-round" id="demo-round">Round 2 of 4</span>
+          </div>
+        </div>
+
+        <div class="demo-controls">
+          <button type="button" class="round-btn" id="demo-reset" aria-label="Reset">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 9.5a5.5 5.5 0 1 1 1.6 4.4M4.5 4.5v5h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button type="button" class="btn btn-primary demo-toggle" id="demo-toggle" aria-pressed="false">
+            <svg class="i-play" viewBox="0 0 20 20" aria-hidden="true"><path d="M6.5 4.6v10.8a.8.8 0 0 0 1.2.7l8.6-5.4a.8.8 0 0 0 0-1.4L7.7 3.9a.8.8 0 0 0-1.2.7Z" fill="currentColor"/></svg>
+            <svg class="i-pause" viewBox="0 0 20 20" aria-hidden="true"><rect x="5" y="4" width="3.6" height="12" rx="1.2" fill="currentColor"/><rect x="11.4" y="4" width="3.6" height="12" rx="1.2" fill="currentColor"/></svg>
+            <span id="demo-toggle-label">Start</span>
+          </button>
+          <button type="button" class="round-btn" id="demo-skip" aria-label="Skip to next mode">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 5.2v9.6L11.5 10ZM11.5 5.2v9.6L18 10Z" fill="currentColor" transform="translate(-1.5 0)"/></svg>
+          </button>
+        </div>
+        <a class="demo-continue" id="demo-continue" href="app.html" hidden>Continue in the app <span aria-hidden="true">→</span></a>
+
+        <div class="scene-switch">
+          <span class="scene-switch-label">Scene</span>
+          <div class="scene-dots" id="scene-dots" role="group" aria-label="Hero background scene"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────  HOW IT WORKS  ───────────────────────── -->
+  <section class="section" id="how" aria-labelledby="how-title">
+    <div class="container">
+      <header class="section-head reveal">
+        <p class="eyebrow">How it works</p>
+        <h2 id="how-title">From “I should start” to done.</h2>
+        <p class="lead">Work in short bursts, rest on purpose, and see what's working.</p>
+      </header>
+      <ol class="steps" data-stagger>
+        <li class="step glass reveal">
+          <span class="step-num">01</span>
+          <h3>Pick a task</h3>
+          <p>Type what you're working on, or let your calendar add it for you.</p>
+        </li>
+        <li class="step glass reveal">
+          <span class="step-num">02</span>
+          <h3>Press <kbd>Space</kbd></h3>
+          <p>Choose a scene and some music, then get to work. The timer handles the rest.</p>
+        </li>
+        <li class="step glass reveal">
+          <span class="step-num">03</span>
+          <h3>Take a real break</h3>
+          <p>Five minutes after each session, fifteen after every fourth. They start on their own, so you don't have to remember.</p>
+        </li>
+        <li class="step glass reveal">
+          <span class="step-num">04</span>
+          <h3>See what works</h3>
+          <p>Rate each session from 1 to 10 and Pure Focus shows you when, where and how you focus best.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────  FEATURES  ───────────────────────── -->
+  <section class="section" id="features" aria-labelledby="features-title">
+    <div class="container">
+      <header class="section-head reveal">
+        <p class="eyebrow">Features</p>
+        <h2 id="features-title">Built to help you actually finish things.</h2>
+        <p class="lead">A timer, your tasks, your calendars and your focus stats, working together.</p>
+      </header>
+
+      <div class="bento" data-stagger>
+
+        <!-- Timer & modes -->
+        <article class="tile glass tile-7 reveal">
+          <div class="tile-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 10v3.5l2.3 2M9.5 3h5"/></svg></div>
+          <h3>Timer &amp; modes</h3>
+          <p>Classic 25/5/15 Pomodoros, or set your own lengths. Pick a daily goal and let each session roll into the next.</p>
+          <div class="tile-visual cycle" aria-hidden="true">
+            <div class="cycle-bar">
+              <span class="seg f" style="--m:25"></span><span class="seg s" style="--m:5"></span>
+              <span class="seg f" style="--m:25"></span><span class="seg s" style="--m:5"></span>
+              <span class="seg f" style="--m:25"></span><span class="seg s" style="--m:5"></span>
+              <span class="seg f" style="--m:25"></span><span class="seg l" style="--m:15"></span>
+            </div>
+            <div class="cycle-legend">
+              <span><i class="f"></i>Focus <b>25</b></span>
+              <span><i class="s"></i>Short break <b>5</b></span>
+              <span><i class="l"></i>Long break <b>15</b></span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Tasks -->
+        <article class="tile glass tile-5 reveal">
+          <div class="tile-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 6.5h10M10 12h10M10 17.5h10"/><path d="M3.8 6.4l1.4 1.4L8 5M3.8 11.9l1.4 1.4L8 10.5"/><circle cx="5.6" cy="17.5" r="1.6"/></svg></div>
+          <h3>Today's Tasks</h3>
+          <p>Break big work into subtasks, tag each one, and estimate how many pomodoros it needs.</p>
+          <ul class="tile-visual mini-tasks" aria-hidden="true">
+            <li class="is-active"><span class="check"></span><span class="t">Draft chapter three<small>● Study · Library</small></span><span class="pips"><i class="on"></i><i></i></span></li>
+            <li><span class="check"></span><span class="t">HW 3.6: Quadratics<small>● Study · ＋ Location</small></span><span class="pips"><i></i></span></li>
+            <li class="is-done"><span class="check"></span><span class="t">Clean the kitchen<small>● Chores · Home</small></span><span class="pips"><i class="on"></i></span></li>
+          </ul>
+        </article>
+
+        <!-- Scenes -->
+        <article class="tile glass tile-5 tile-scene reveal">
+          <img class="tile-bg" src="https://assets.mixkit.co/videos/4037/4037-thumb-720-0.jpg" alt="" loading="lazy" decoding="async">
+          <div class="tile-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 15.5l5-4 4 3 3-2.2 6 4.2"/><circle cx="16" cy="9.3" r="1.5"/></svg></div>
+          <h3>Liquid Glass &amp; 4K scenes</h3>
+          <p>Thirteen looping scenes behind your timer. Northern lights, rain on a window, a misty forest.</p>
+          <a class="tile-link" href="#scenes">Browse the scenes <span aria-hidden="true">→</span></a>
+        </article>
+
+        <!-- Fingerprint -->
+        <article class="tile glass tile-7 reveal">
+          <div class="tile-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8v2M20 11a8 8 0 0 0-5-7.4M8 11a4 4 0 0 1 8 0v3a12 12 0 0 1-1 4.6M12 11v3a16 16 0 0 1-2.2 7M6.6 18.5A12 12 0 0 0 8 14"/></svg></div>
+          <h3>Your Focus Fingerprint</h3>
+          <p>Rate your sessions and find out when, where and with what music you do your best work.</p>
+          <div class="tile-visual fp" aria-hidden="true">
+            <div><small>Best time</small><b>Afternoon</b><span>8.3 vs 5.8</span></div>
+            <div><small>Best place</small><b>Library</b><span>8.4 vs 6.6</span></div>
+            <div><small>Best music</small><b>Lo-Fi Beats</b><span>7.8 vs 6.6</span></div>
+            <div><small>Best work</small><b>Study</b><span>7.5 vs 6.6</span></div>
+          </div>
+          <em class="example">Example</em>
+        </article>
+
+        <!-- Music -->
+        <article class="tile glass tile-4 reveal">
+          <div class="tile-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6.5l11-2.5v11.5"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="15.5" r="2.5"/></svg></div>
+          <h3>Music made for focus</h3>
+          <p id="home-music-copy">Wordless music and ambience that sits under your work. Skip anything you don't like.</p>
+          <div class="tile-visual now-playing" aria-hidden="true">
+            <div class="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="np-meta"><b id="home-track">Tranquil Mindscape</b><span id="home-artist">HoliznaCC0 · Lo-Fi Beats</span></div>
+          </div>
+        </article>
+
+        <!-- Focus Guard -->
+        <article class="tile glass tile-4 reveal">
+          <div class="tile-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 2.6v6c0 4.4-2.9 7.7-7 9.4-4.1-1.7-7-5-7-9.4v-6L12 3Z"/><path d="M9 12l2.2 2.2L15.3 10"/></svg></div>
+          <h3>Focus Guard</h3>
+          <p>Nudges you when your attention drifts and keeps distracting sites closed until your break. Optional and private.</p>
+          <div class="tile-visual guard" aria-hidden="true"><span class="guard-pill"><i></i>In the zone · 92%</span><span class="guard-note">Sites stay closed while you focus</span></div>
+        </article>
+
+        <!-- Calendar -->
+        <article class="tile glass tile-5 reveal">
+          <div class="tile-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></div>
+          <h3>All your calendars</h3>
+          <p>Canvas, Google, Outlook and Apple calendars in one view. New assignments show up in your task list automatically.</p>
+          <div class="tile-visual sources" aria-hidden="true">
+            <span class="source"><i class="canvas"></i>Canvas</span>
+            <span class="source"><i class="g-cal"></i>Google</span>
+            <span class="source"><i class="g-tasks"></i>Google Tasks</span>
+            <span class="source"><i class="ics"></i>Any .ics link</span>
+          </div>
+          <a class="tile-link" href="#schedule">See how it works <span aria-hidden="true">→</span></a>
+        </article>
+
+        <!-- Streaks -->
+        <article class="tile glass tile-7 reveal">
+          <div class="tile-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8c1 3.3-2 4.7-2 7.1 0 1.4.9 2.3 2 2.3 1.2 0 2-.9 2-2.4 2.5 2 4 4.5 4 7.1A6 6 0 0 1 12 22.5a6 6 0 0 1-6-5.6C6 12.6 12 10.6 12 2.8Z"/></svg></div>
+          <h3>Streaks, levels &amp; achievements</h3>
+          <p>Earn XP, build a streak, hit your daily goal and unlock achievements. Small wins that keep you coming back.</p>
+          <div class="tile-visual hud" aria-hidden="true">
+            <div class="hud-goal">
+              <svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" class="t"/><circle cx="22" cy="22" r="18" class="p" transform="rotate(-90 22 22)"/></svg>
+              <span><b>90</b>/120 min</span>
+            </div>
+            <div class="hud-streak"><svg viewBox="0 0 16 16"><path d="M8 1.5c.6 2-1.2 2.8-1.2 4.2 0 .8.5 1.3 1.1 1.3.7 0 1.1-.6 1.1-1.4 1.5 1.2 2.4 2.7 2.4 4.3A3.4 3.4 0 0 1 8 14a3.4 3.4 0 0 1-3.4-4.1C4.6 7 8 5.6 8 1.5Z"/></svg><b>5</b>-day streak</div>
+            <div class="hud-level"><span><b>Level 7</b> · 62% to next</span><span class="xp"><i style="--p:.62"></i></span></div>
+            <div class="week">
+              <span class="on">S</span><span class="on">M</span><span class="on">T</span><span class="on">W</span><span class="on">T</span><span class="today">F</span><span>S</span>
+            </div>
+            <em class="example">Example</em>
+          </div>
+        </article>
+
+        <!-- Themes -->
+        <article class="tile glass tile-4 reveal">
+          <div class="tile-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.2 0 1.8-.9 1.4-2l-.3-.8c-.4-1.1.4-2.2 1.6-2.2H17a4 4 0 0 0 4-4c0-5-4-9-9-9Z"/><circle cx="7.6" cy="11.2" r="1.1"/><circle cx="10.2" cy="7.2" r="1.1"/><circle cx="14.8" cy="7.4" r="1.1"/></svg></div>
+          <h3>Make it yours</h3>
+          <p>Fourteen color themes. Try one and this page changes with it.</p>
+          <div class="tile-visual swatches" role="group" aria-label="Preview a theme">
+            <button type="button" class="swatch" data-theme="ember" aria-pressed="true" title="Ember"><span class="sr-only">Ember</span></button>
+            <button type="button" class="swatch" data-theme="ocean" aria-pressed="false" title="Ocean"><span class="sr-only">Ocean</span></button>
+            <button type="button" class="swatch" data-theme="forest" aria-pressed="false" title="Forest"><span class="sr-only">Forest</span></button>
+            <button type="button" class="swatch" data-theme="lavender" aria-pressed="false" title="Lavender"><span class="sr-only">Lavender</span></button>
+            <button type="button" class="swatch" data-theme="rose" aria-pressed="false" title="Rose"><span class="sr-only">Rose</span></button>
+            <button type="button" class="swatch" data-theme="graphite" aria-pressed="false" title="Graphite"><span class="sr-only">Graphite</span></button>
+            <button type="button" class="swatch" data-theme="midnight" aria-pressed="false" title="Midnight"><span class="sr-only">Midnight</span></button>
+            <button type="button" class="swatch" data-theme="mocha" aria-pressed="false" title="Mocha"><span class="sr-only">Mocha</span></button>
+            <button type="button" class="swatch" data-theme="pomodoro" aria-pressed="false" title="Pomodoro"><span class="sr-only">Pomodoro</span></button>
+            <button type="button" class="swatch" data-theme="honey" aria-pressed="false" title="Honey"><span class="sr-only">Honey</span></button>
+            <button type="button" class="swatch" data-theme="matcha" aria-pressed="false" title="Matcha"><span class="sr-only">Matcha</span></button>
+            <button type="button" class="swatch" data-theme="glacier" aria-pressed="false" title="Glacier"><span class="sr-only">Glacier</span></button>
+            <button type="button" class="swatch" data-theme="boreal" aria-pressed="false" title="Boreal"><span class="sr-only">Boreal</span></button>
+            <button type="button" class="swatch" data-theme="synthwave" aria-pressed="false" title="Synthwave"><span class="sr-only">Synthwave</span></button>
+          </div>
+          <p class="swatch-name" aria-live="polite"><span id="theme-name">Ember</span></p>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────  CALENDAR  ───────────────────────── -->
+  <section class="section" id="schedule" aria-labelledby="schedule-title">
+    <div class="container split">
+      <div class="split-copy reveal">
+        <p class="eyebrow">Calendar</p>
+        <h2 id="schedule-title">Your calendar builds your to-do list.</h2>
+        <p class="lead">Start any event's title with <code>PUREFOCUS:</code> and it appears in your task list. Works with Google Calendar and more.</p>
+        <ul class="checks">
+          <li><b>Automatic.</b> New events show up within a couple of minutes, and the event's length sets the number of pomodoros.</li>
+          <li><b>Type and location included.</b> Add <code>Type: Study</code> and <code>Location: Library</code> to the description.</li>
+          <li><b>Canvas assignments too.</b> Set a type once and it carries across that course.</li>
+          <li><b>Read-only.</b> Pure Focus never changes your calendars.</li>
+        </ul>
+      </div>
+      <figure class="flow reveal" aria-label="A calendar event titled PUREFOCUS: Study for chem test becomes a task">
+        <div class="flow-card glass">
+          <span class="flow-label">In Google Calendar</span>
+          <p class="flow-title"><mark>PUREFOCUS:</mark> Study for chem test</p>
+          <p class="flow-time">Today · 4:00 – 4:50 PM</p>
+          <p class="flow-desc">Type: Study<br>Location: Library<br>Chapters 8 and 9</p>
+        </div>
+        <div class="flow-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v16m-6-6 6 6 6-6"/></svg></div>
+        <div class="flow-card flow-task glass">
+          <span class="flow-label">In Today's Tasks</span>
+          <div class="flow-row"><span class="check"></span><span class="t">Study for chem test<small><i></i>Study · Library</small></span><span class="flow-pomo">0/2</span></div>
+        </div>
+        <figcaption>Example</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────  SCENES  ───────────────────────── -->
+  <section class="section scenes" id="scenes" aria-labelledby="scenes-title">
+    <div class="container scenes-head">
+      <header class="section-head reveal">
+        <p class="eyebrow">Scenes</p>
+        <h2 id="scenes-title">Choose your atmosphere.</h2>
+        <p class="lead"><span id="scene-count">Thirteen</span> loops, up to 4K — or keep the animated aurora.</p>
+      </header>
+      <div class="track-nav" aria-hidden="false">
+        <button type="button" class="round-btn" id="track-prev" aria-label="Scroll scenes left"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12 5l-5 5 5 5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button type="button" class="round-btn" id="track-next" aria-label="Scroll scenes right"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8 5l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+    </div>
+    <ul class="scene-track reveal" id="scene-track" aria-label="Scenes"></ul>
+  </section>
+
+  <!-- ─────────────────────────  MAC  ───────────────────────── -->
+  <section class="section mac" id="mac" aria-labelledby="mac-title">
+    <div class="container split split-rev">
+      <figure class="mac-art reveal" aria-label="Illustration of the Pure Focus menu bar companion">
+        <div class="mac-bar">
+          <span class="mb-dots"><i></i><i></i><i></i></span>
+          <span class="mb-item is-open"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" class="t"/><circle cx="10" cy="10" r="7" class="p" transform="rotate(-90 10 10)"/><circle cx="10" cy="10" r="2" class="pip"/></svg>18:42</span>
+        </div>
+        <div class="popover glass glass-blur">
+          <div class="pop-ring">
+            <svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="50" class="t"/><circle cx="60" cy="60" r="50" class="p" transform="rotate(-90 60 60)"/></svg>
+            <div><b>18:42</b><span>Focus</span></div>
+          </div>
+          <div class="pop-transport">
+            <span class="pt"><svg viewBox="0 0 20 20"><path d="M4.5 9.5a5.5 5.5 0 1 1 1.6 4.4M4.5 4.5v5h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="pt main"><svg viewBox="0 0 20 20"><rect x="5" y="4" width="3.6" height="12" rx="1.2" fill="currentColor"/><rect x="11.4" y="4" width="3.6" height="12" rx="1.2" fill="currentColor"/></svg></span>
+            <span class="pt"><svg viewBox="0 0 20 20"><path d="M3 5.2v9.6L10 10ZM10 5.2v9.6L16.5 10Z" fill="currentColor"/></svg></span>
+          </div>
+          <div class="pop-links"><span>Open Pure Focus</span><span>Reports</span><span>Settings</span></div>
+        </div>
+        <figcaption>Illustration — not a screenshot</figcaption>
+      </figure>
+      <div class="split-copy reveal">
+        <p class="eyebrow">Pure Focus for Mac</p>
+        <h2 id="mac-title">Your timer, always one glance away.</h2>
+        <p class="lead">Pure Focus for Mac keeps a progress ring and countdown in your menu bar, so you can check in without switching windows.</p>
+        <ul class="checks">
+          <li><b>Start, pause or skip</b> right from the menu bar.</li>
+          <li><b>Blocks distracting sites</b> in Safari while you focus.</li>
+          <li><b>Play your own music.</b> Every folder you pick becomes a genre.</li>
+          <li><b>Keeps your screen awake</b> during a session.</li>
+        </ul>
+        <div class="cta-row">
+          <a class="btn btn-primary btn-lg" href="app.html">Use it on the web today</a>
+          <span class="req">Same timer, tasks and reports, right in your browser</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────  FAQ  ───────────────────────── -->
+  <section class="section" id="faq" aria-labelledby="faq-title">
+    <div class="container faq">
+      <header class="section-head faq-head reveal">
+        <p class="eyebrow">FAQ</p>
+        <h2 id="faq-title">Questions, answered.</h2>
+        <p class="lead">The short version: it's free, it's private, and it takes about a minute to start.</p>
+      </header>
+      <div class="faq-list" data-stagger>
+        <details class="qa reveal">
+          <summary>Is Pure Focus free?</summary>
+          <p>Yes. Create a free account, open the app and press <kbd>Space</kbd>. No payment, no ads.</p>
+        </details>
+        <details class="qa reveal">
+          <summary>Where is my data stored?</summary>
+          <p>In your Pure Focus account, so it follows you to every device. Your browser also keeps a copy for fast, offline use. You can export everything to CSV, and import it back, at any time.</p>
+        </details>
+        <details class="qa reveal">
+          <summary>Does it work with Canvas?</summary>
+          <p>Yes. Add your Canvas calendar link and assignments show up on the calendar and in Today's Tasks, with their descriptions. Blackbaud, Outlook, Apple and any other <code>.ics</code> calendar link work too. Calendar links need the small Pure Focus helper or a hosted version of the app.</p>
+        </details>
+        <details class="qa reveal">
+          <summary>How do I turn a calendar event into a task?</summary>
+          <p>Start its title with <code>PUREFOCUS:</code> (capitals don't matter). Add <code>Type:</code> and <code>Location:</code> lines to the description and the task picks those up as well. It works from Google Calendar or any calendar you've connected.</p>
+        </details>
+        <details class="qa reveal">
+          <summary>Which browsers does it work in?</summary>
+          <p>Current versions of Safari, Chrome, Edge and Firefox, on computers and phones. The Focus Guard site blocker is a Chromium extension, so it runs in Chrome, Edge, Brave and Arc; in Safari, the Mac app does that job.</p>
+        </details>
+        <details class="qa reveal">
+          <summary>What can Google sign-in see?</summary>
+          <p>Signing in to Pure Focus with Google only shares your name, email address and profile photo, so your account and sync work. Connecting Google Calendar or Google Tasks is a separate, optional step that asks for <strong>read-only</strong> access, so Pure Focus can show your events and tasks but can't create, change or delete anything in your Google account. Prefer not to connect? Import an .ics file instead.</p>
+        </details>
+        <details class="qa reveal">
+          <summary>Does it work offline?</summary>
+          <p>While the app is open, your timer, tasks and reports keep working without a connection, and changes sync the next time you're online. Signing in, streaming scenes and Google import need internet.</p>
+        </details>
+        <details class="qa reveal">
+          <summary>Are there keyboard shortcuts?</summary>
+          <p>Press <kbd>Space</kbd> to start or pause the timer. While editing a task, <kbd>⌘</kbd> <kbd>↩</kbd> (<kbd>Ctrl</kbd> <kbd>Enter</kbd> on Windows) saves it and <kbd>Esc</kbd> closes it.</p>
+        </details>
+        <details class="qa reveal">
+          <summary>What is the Pomodoro Technique?</summary>
+          <p>A simple rhythm: work for 25 minutes, take a 5-minute break, and after every fourth round take a longer 15-minute break. Pure Focus lets you change every length and the long-break interval.</p>
+        </details>
+        <details class="qa reveal">
+          <summary>Who made the music and the scenes?</summary>
+          <p>The music comes from <a href="https://incompetech.com" rel="noopener" target="_blank">Kevin MacLeod</a> (CC BY 4.0), <a href="https://freemusicarchive.org/music/holiznacc0" rel="noopener" target="_blank">HoliznaCC0</a> (CC0), and pianists Kimiko Ishizaka and Musopen (public domain). The full list is in <a href="assets/music/CREDITS.txt" target="_blank">the credits</a>. The background videos come from <a href="https://mixkit.co" rel="noopener" target="_blank">Mixkit</a>.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────  FINAL CTA  ───────────────────────── -->
+  <section class="section final" aria-labelledby="final-title">
+    <div class="container final-inner reveal">
+      <div class="orbit" aria-hidden="true">
+        <svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="84" class="t"/><circle cx="100" cy="100" r="84" class="p" transform="rotate(-90 100 100)"/></svg>
+        <span class="orbit-dot"></span>
+      </div>
+      <h2 id="final-title">Your next 25 minutes start now.</h2>
+      <p class="lead">Create your free account, then press <kbd>Space</kbd>.</p>
+      <a class="btn btn-primary btn-lg" href="app.html" data-returning="Continue to your timer">Open Pure Focus</a>
+    </div>
+  </section>
+
+</main>
+
+<!-- ─────────────────────────  FOOTER  ───────────────────────── -->
+<footer class="footer">
+  <div class="container footer-grid">
+    <div class="footer-brand">
+      <a class="brand" href="#top">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+          <circle cx="16" cy="16" r="11" fill="none" stroke="currentColor" stroke-opacity=".28" stroke-width="3.5"/>
+          <circle cx="16" cy="16" r="11" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="52 17.2" transform="rotate(-90 16 16)"/>
+          <circle cx="5" cy="15.8" r="2.7" fill="#fff"/>
+          <circle cx="16" cy="16" r="2.3" fill="currentColor"/>
+        </svg>
+        <span class="brand-name">Pure Focus</span>
+      </a>
+      <p>A calm Pomodoro timer for the web and macOS.</p>
+      <p class="copy">© 2026 Pure Focus</p>
+    </div>
+    <nav class="footer-links" aria-label="Footer">
+      <h3>Product</h3>
+      <a href="app.html">Open the app</a>
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#schedule">Calendar</a>
+      <a href="#mac">Mac app</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div class="footer-credits">
+      <h3>Credits</h3>
+      <p>Music by <a href="https://incompetech.com" rel="noopener" target="_blank">Kevin MacLeod</a>, licensed under <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener" target="_blank">CC BY 4.0</a>; <a href="https://freemusicarchive.org/music/holiznacc0" rel="noopener" target="_blank">HoliznaCC0</a> (CC0); Kimiko Ishizaka and Musopen (public domain). <a href="assets/music/CREDITS.txt" target="_blank">Full track credits</a>.</p>
+      <p>Background videos from <a href="https://mixkit.co" rel="noopener" target="_blank">Mixkit (mixkit.co)</a>, <a id="mixkit-license" href="https://mixkit.co/license/#videoFree" rel="noopener" target="_blank">Mixkit Stock Video Free License</a>.</p>
+      <p class="clip-credits" id="clip-credits" hidden></p>
+    </div>
+  </div>
+</footer>
+
+<script src="js/config.js?v=10311900"></script>
+<script src="home.js?v=10311400" defer></script>
+</body>
+</html>

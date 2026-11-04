@@ -1,0 +1,136 @@
+rules_version = '2';
+// ═══════════════════════════════════════════════════════════════════════
+// Pure Focus — Cloud Firestore security rules, CLOUD_VERSION 1
+// Paste into Firebase console › Firestore Database › Rules › Publish.
+// Ships as WEB/backend/firestore.rules and
+// MAC/Sources/PureFocusCore/Resources/Cloud/firestore.rules (byte-identical).
+//
+// Layout
+//   users/{uid}                       private profile (owner only)
+//   users/{uid}/records/{kind:id}     sync records (owner only, monotonic LWW)
+//   users/{uid}/friends/{friendUid}   friendship edge (created with a friend-code proof)
+//   users/{uid}/weeks/{YYYY-MM-DD}    weekly board entry (owner writes; opted-in friends read)
+//   codes/{CODE}                      friend code -> {uid, displayName} (get-only)
+//   aiUsage/{uid}/days/{YYYY-MM-DD}   AI proxy counters (v2-ai.md §9.3; written only by the function)
+//
+// Not emulator-tested on the authoring machine (no Java/node). Run the acceptance script in
+// v2-backend.md §12 with the Firestore emulator before relying on it.
+// ═══════════════════════════════════════════════════════════════════════
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isMe(uid) { return signedIn() && request.auth.uid == uid; }
+    function codeOwner(code) {
+      return get(/databases/$(database)/documents/codes/$(code)).data.uid;
+    }
+    function isFriendOf(uid) {
+      return signedIn() && exists(/databases/$(database)/documents/users/$(uid)/friends/$(request.auth.uid));
+    }
+    // Reciprocal leaderboard: you only see friends' weeks while you compete yourself.
+    function myOptIn() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.lbOptIn == true;
+    }
+
+    function validProfile(d) {
+      return d.keys().hasOnly(['displayName', 'avatarHue', 'friendCode', 'lbOptIn', 'tz', 'createdAt', 'updatedAt'])
+        && d.displayName is string && d.displayName.size() >= 1 && d.displayName.size() <= 32
+        && d.avatarHue is int && d.avatarHue >= 0 && d.avatarHue <= 359
+        && d.friendCode is string && d.friendCode.matches('^[0-9A-HJKMNP-TV-Z]{8}$')
+        && d.lbOptIn is bool
+        && d.tz is string && d.tz.size() <= 64
+        && d.updatedAt == request.time;
+    }
+
+    function validRecord(rid, d) {
+      return d.keys().hasAll(['k', 'id', 'j', 'u', 'del', 'dev', 'v', 'su'])
+        && d.keys().hasOnly(['k', 'id', 'j', 'u', 'del', 'dev', 'v', 'su'])
+        && d.k is string && d.k.matches('^[a-z][A-Za-z]{1,31}$')   // v1 kinds + future ones
+        && d.id is string && d.id.size() >= 1 && d.id.size() <= 200
+        && d.id == d.id.lower() && !d.id.matches('.*/.*')
+        && rid == d.k + ':' + d.id
+        && d.j is string && d.j.size() <= 262144
+        && d.u is int && d.u <= request.time.toMillis() + 300000
+        && d.del is bool
+        && d.dev is string && d.dev.matches('^[0-9a-f]{32}$')
+        && d.v is int
+        && d.su == request.time;
+    }
+    // Last-write-wins on (u, dev): an older write is refused.
+    function newer(n, o) { return n.u > o.u || (n.u == o.u && n.dev > o.dev); }
+
+    function validWeek(week, d) {
+      return week.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && d.keys().hasOnly(['week', 'minutes', 'sessions', 'activeDays', 'xp', 'optIn', 'displayName',
+                             'avatarHue', 'engine', 'su'])
+        && d.week == week
+        && d.minutes is int && d.minutes >= 0 && d.minutes <= 3360
+        && d.sessions is int && d.sessions >= 0 && d.sessions <= 300
+        && d.activeDays is int && d.activeDays >= 0 && d.activeDays <= 7
+        && d.xp is int && d.xp >= 0 && d.xp <= 30 * d.minutes + 180 * d.sessions + 10950   // CloudRef.weekDocXPBound
+        && d.optIn is bool
+        && d.displayName is string && d.displayName.size() >= 1 && d.displayName.size() <= 32
+        && d.avatarHue is int && d.avatarHue >= 0 && d.avatarHue <= 359
+        && d.engine is int
+        && d.su == request.time;
+    }
+
+    match /users/{uid} {
+      allow get: if isMe(uid);
+      allow list: if false;
+      allow create, update: if isMe(uid) && validProfile(request.resource.data);
+      allow delete: if isMe(uid);
+
+      match /records/{rid} {
+        allow read: if isMe(uid);
+        allow create: if isMe(uid) && validRecord(rid, request.resource.data);
+        allow update: if isMe(uid) && validRecord(rid, request.resource.data)
+                      && newer(request.resource.data, resource.data);
+        allow delete: if isMe(uid);          // only "Delete my cloud data"; normal deletes are tombstones
+      }
+
+      match /friends/{fid} {
+        allow read: if isMe(uid);
+        allow delete: if isMe(uid) || isMe(fid);
+        allow create: if signedIn() && uid != fid
+          && request.resource.data.keys().hasOnly(['since', 'code', 'name'])
+          && request.resource.data.name is string && request.resource.data.name.size() <= 32
+          && request.resource.data.since == request.time
+          && request.resource.data.code is string
+          && request.resource.data.code.matches('^[0-9A-HJKMNP-TV-Z]{8}$')
+          && ((isMe(uid) && codeOwner(request.resource.data.code) == fid)
+              || (isMe(fid) && codeOwner(request.resource.data.code) == uid));
+      }
+
+      match /weeks/{week} {
+        // `resource == null`: a friend with no doc yet reads as NOT_FOUND (so one batchGet never fails as a whole).
+        allow get: if isMe(uid) || ((resource == null || resource.data.optIn == true) && isFriendOf(uid) && myOptIn());
+        allow list: if isMe(uid);
+        // Client-written board (default, Spark plan). With the optional `boardSync` Cloud Function deployed
+        // (v2-backend.md §8.6), replace the next two lines with:  allow create, update: if false;
+        allow create: if isMe(uid) && validWeek(week, request.resource.data);
+        allow update: if isMe(uid) && validWeek(week, request.resource.data)
+                      && request.time > resource.data.su + duration.value(20, 's');
+        allow delete: if isMe(uid);
+      }
+    }
+
+    match /aiUsage/{uid}/{doc=**} {
+      allow read: if isMe(uid);
+      allow write: if false;
+    }
+
+    match /codes/{code} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn()
+        && code.matches('^[0-9A-HJKMNP-TV-Z]{8}$')
+        && request.resource.data.keys().hasOnly(['uid', 'displayName', 'createdAt'])
+        && request.resource.data.displayName is string && request.resource.data.displayName.size() >= 1
+        && request.resource.data.displayName.size() <= 32
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.createdAt == request.time;
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+  }
+}
