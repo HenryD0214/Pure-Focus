@@ -10,9 +10,12 @@
 <script>/* A file of the app's own that fails to load would quietly break whatever needs it: reload once to get it (not again within 30 s). */
 addEventListener('error',function(e){var t=e.target;if(!t||t.tagName!=='SCRIPT'||!t.src||t.src.indexOf(location.origin)!==0)return;try{var n=Date.now(),l=+sessionStorage.getItem('pf.reloadedForScript')||0;if(n-l<30000)return;sessionStorage.setItem('pf.reloadedForScript',String(n));location.reload();}catch(_){}},true);</script>
 <script>/* Early paint (v2-themes §8.1.3): theme + scheme before the CSS paints. Settings.applyTheme() corrects it on init. */
-try{var d=JSON.parse(localStorage.getItem('purefocus.v1')||'{}').settings||{};var r=document.documentElement;r.dataset.pfTheme=d.themeID||'ember';var s=d.colorScheme||'dark';if(s==='system')s=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';r.dataset.theme=s;r.dataset.schemePref=s;r.dataset.view='focus';var t=localStorage.getItem('purefocus.ui.sceneTone'),hv=(location.hash||'').slice(1);if(t)r.dataset.sceneTone=t;if(s==='light'&&t==='dark'&&(!hv||hv==='focus')){r.dataset.theme='dark';r.classList.add('scene-adapt');}if(localStorage.getItem('purefocus.ui.sidebar')==='collapsed')r.classList.add('sb-collapsed');if(localStorage.getItem('purefocus.ui.tasksPanel')==='collapsed')r.classList.add('tasks-collapsed');}catch(e){document.documentElement.dataset.pfTheme='ember';}</script>
-<script>/* Accounts are required: keep the app hidden until the gate has checked for a session. */
-document.documentElement.classList.add('auth-locked');</script>
+try{var d=JSON.parse(localStorage.getItem('purefocus.v1')||'{}').settings||{};var r=document.documentElement;r.dataset.pfTheme=d.themeID||'ember';var s=d.colorScheme||'system';if(s==='system')s=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';r.dataset.theme=s;r.dataset.schemePref=s;r.dataset.view='focus';var t=localStorage.getItem('purefocus.ui.sceneTone'),hv=(location.hash||'').slice(1);if(t)r.dataset.sceneTone=t;if(s==='light'&&t==='dark'&&(!hv||hv==='focus')){r.dataset.theme='dark';r.classList.add('scene-adapt');}if(localStorage.getItem('purefocus.ui.sidebar')==='collapsed')r.classList.add('sb-collapsed');if(localStorage.getItem('purefocus.ui.tasksPanel')==='collapsed')r.classList.add('tasks-collapsed');}catch(e){document.documentElement.dataset.pfTheme='ember';}</script>
+<script>/* Accounts are required: keep the app hidden until the gate has checked for a session.
+   The sign-in screen always follows the OS scheme; AuthGate restores the saved
+   theme once a session is confirmed. */
+document.documentElement.classList.add('auth-locked');
+try{var m=window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)');document.documentElement.dataset.theme=(m&&m.matches)?'light':'dark';}catch(e){}</script>
 <link rel="stylesheet" href="css/auth-gate.css?v=10311800">
 <link rel="stylesheet" href="css/pro-modal.css?v=10318000">
 <link rel="stylesheet" href="css/themes.css?v=10211152">
@@ -20,13 +23,13 @@ document.documentElement.classList.add('auth-locked');</script>
 <link rel="stylesheet" href="css/tasks.css?v=11041001">
 <link rel="stylesheet" href="css/scenes.css?v=10211240">
 <link rel="stylesheet" href="css/rewards.css?v=10302145">
-<link rel="stylesheet" href="css/calendar.css?v=10302145">
+<link rel="stylesheet" href="css/calendar.css?v=11051001">
 <link rel="stylesheet" href="css/account.css?v=10211152">
 <link rel="stylesheet" href="css/friends.css?v=10211152">
 <link rel="stylesheet" href="css/coach.css?v=10302145">
 <link rel="stylesheet" href="css/guard.css?v=11041001">
 <link rel="stylesheet" href="css/insights.css?v=10302145">
-<link rel="stylesheet" href="css/player.css?v=10302145">
+<link rel="stylesheet" href="css/player.css?v=11051002">
 <link rel="stylesheet" href="css/calm.css?v=10302145">
 <link rel="stylesheet" href="css/shell.css?v=10302216">
 <link rel="stylesheet" href="css/light.css?v=10271510">
@@ -874,27 +877,27 @@ document.documentElement.classList.add('auth-locked');</script>
 <div id="nudge-layer"></div>
 
 <script src="js/config.js?v=10311900"></script>
-<script src="js/pro-config.js?v=10312000"></script>
+<script src="js/pro-config.js?v=11051001"></script>
 <script src="js/plan.js?v=10314000"></script>
 <script src="js/premium-gate.js?v=10318000"></script>
 <script src="js/themes.js?v=10211152"></script>
 <script src="js/profile.js?v=10211152"></script>
-<script src="js/store.js?v=11041001"></script>
+<script src="js/store.js?v=11051002"></script>
 <script src="js/engagement.js?v=11041001"></script>
 <script src="js/calendar-migrate.js?v=10211152"></script>
 <script src="js/csv.js?v=10302145"></script>
 <script src="js/soundcore.js?v=10211152"></script>
-<script src="js/audio.js?v=11041001"></script>
+<script src="js/audio.js?v=11041005"></script>
 <script src="js/charts.js?v=10302145"></script>
-<script src="js/cloudref.js?v=10211152"></script>
+<script src="js/cloudref.js?v=11051001"></script>
 <script src="js/cloud.js?v=10316000"></script>
-<script src="js/tasks.js?v=11041001"></script>
+<script src="js/tasks.js?v=11051001"></script>
 <script src="js/tasksync.js?v=11041001"></script>
 <script src="js/timer.js?v=11041001"></script>
 <script src="js/reports.js?v=11041001"></script>
-<script src="js/settings.js?v=10312500"></script>
+<script src="js/settings.js?v=10312501"></script>
 <script src="js/ics.js?v=10302145"></script>
-<script src="js/scenes.js?v=10271700"></script>
+<script src="js/scenes.js?v=11051001"></script>
 <script src="js/player.js?v=10302145"></script>
 <script src="js/rewards.js?v=10302145"></script>
 <script src="js/friends.js?v=10211152"></script>
@@ -902,12 +905,12 @@ document.documentElement.classList.add('auth-locked');</script>
 <script src="js/insights-core.js?v=11041001"></script>
 <script src="js/insights.js?v=11041001"></script>
 <script src="js/guard-rules.js?v=10211152"></script>
-<script src="js/guard.js?v=10302145"></script>
+<script src="js/guard.js?v=11051001"></script>
 <script src="js/feeds.js?v=10316000"></script>
-<script src="js/assignments.js?v=11041001"></script>
+<script src="js/assignments.js?v=11051001"></script>
 <script src="js/calendar-core.js?v=10211152"></script>
 <script src="js/google.js?v=11041001"></script>
-<script src="js/calendar.js?v=11041001"></script>
+<script src="js/calendar.js?v=11051001"></script>
 <script src="js/study-plan.js?v=10211152"></script>
 <script src="js/ai.js?v=10251600"></script>
 <script src="js/courses.js?v=10302145"></script>
@@ -916,7 +919,7 @@ document.documentElement.classList.add('auth-locked');</script>
 <script src="js/declutter.js?v=10271700"></script>
 <script src="js/shell.js?v=10310900"></script>
 <script src="js/pro-modal.js?v=10318000"></script>
-<script src="js/auth-gate.js?v=10312000"></script>
+<script src="js/auth-gate.js?v=10312001"></script>
 <script src="js/app.js?v=10312500"></script>
 </body>
 </html>

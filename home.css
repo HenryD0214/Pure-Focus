@@ -526,6 +526,13 @@ main, .footer { position: relative; z-index: 1; }
   opacity: .68;
   transition: opacity .2s, border-color .2s, transform .2s var(--ease-out), box-shadow .2s;
 }
+:root[data-theme="light"] .scene-dot {
+  background: var(--surface-1);
+  border-color: rgba(23, 18, 16, 0.14);
+}
+:root[data-theme="light"] .scene-dot img { opacity: .35; }
+:root[data-theme="light"] .scene-dot:hover { border-color: rgba(23, 18, 16, 0.28); }
+:root[data-theme="light"] .scene-dot[aria-pressed="true"] { border-color: #171210; }
 .scene-dot img { width: 100%; height: 100%; object-fit: cover; }
 .scene-dot:hover { opacity: 1; transform: translateY(-1px); }
 .scene-dot[aria-pressed="true"] {
@@ -1235,4 +1242,201 @@ main, .footer { position: relative; z-index: 1; }
 }
 @supports not (color: color-mix(in srgb, red, blue)) {
   .flow-title mark { background: var(--focus-tint); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SYSTEM LIGHT MODE
+   The homepage follows the OS light/dark preference (the early inline script
+   and home.js set html[data-theme]) — there is no switch. Light is a true
+   light page: the hero and scene photographs are washed out behind a light
+   scrim, and all text and controls use the dark-on-light tokens.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  /* --page / --surface-1 come from themes.css for the chosen preset's light tone. */
+  --page: #faf2ee;
+  --surface-1: #fcf8f6;
+  --text-primary: #171210;
+  --text-secondary: #5b544f;
+  --text-muted: #746c66;
+  --hairline: rgba(23, 18, 16, 0.10);
+  --hairline-strong: rgba(23, 18, 16, 0.17);
+  --shadow-card: 0 18px 50px rgba(82, 55, 40, 0.14);
+}
+
+/* The aurora stays, but quieter under a light page. */
+:root[data-theme="light"] .blob-1 { opacity: .18; }
+:root[data-theme="light"] .blob-2 { opacity: .13; }
+:root[data-theme="light"] .blob-3 { opacity: .14; }
+
+/* ── glass ── */
+:root[data-theme="light"] .glass:not(.demo) {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.48));
+  border-color: rgba(23, 18, 16, 0.08);
+  box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+:root[data-theme="light"] .glass:not(.demo)::before {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.62), transparent 32%);
+}
+:root[data-theme="light"] .glass-blur:not(.demo) {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.74), rgba(255, 255, 255, 0.54));
+}
+
+/* ── nav ── */
+:root[data-theme="light"] .nav-inner {
+  background: rgba(255, 255, 255, 0.56);
+  border-color: rgba(23, 18, 16, 0.08);
+  box-shadow: 0 8px 30px rgba(60, 40, 28, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+:root[data-theme="light"] .nav.is-scrolled .nav-inner {
+  background: rgba(255, 253, 251, 0.9);
+  border-color: rgba(23, 18, 16, 0.10);
+  box-shadow: 0 14px 40px rgba(60, 40, 28, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+:root[data-theme="light"] .nav-links a:hover { background: rgba(23, 18, 16, 0.06); }
+:root[data-theme="light"] .nav-links a.is-current { background: rgba(23, 18, 16, 0.09); }
+
+/* ── controls ── */
+:root[data-theme="light"] kbd,
+:root[data-theme="light"] code,
+:root[data-theme="light"] .btn:not(.btn-primary),
+:root[data-theme="light"] .round-btn,
+:root[data-theme="light"] .pt,
+:root[data-theme="light"] .pop-links span:first-child {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(23, 18, 16, 0.12);
+  color: var(--text-primary);
+}
+:root[data-theme="light"] .btn:not(.btn-primary):hover,
+:root[data-theme="light"] .round-btn:hover { background: #fff; }
+:root[data-theme="light"] kbd,
+:root[data-theme="light"] code { background: rgba(23, 18, 16, 0.06); border-color: rgba(23, 18, 16, 0.10); }
+:root[data-theme="light"] .split-copy code,
+:root[data-theme="light"] .faq code { background: rgba(23, 18, 16, 0.08); }
+
+/* ── text accents that mix with white in the dark theme ── */
+:root[data-theme="light"] .eyebrow,
+:root[data-theme="light"] .step-num,
+:root[data-theme="light"] .tile-icon,
+:root[data-theme="light"] .tile-link,
+:root[data-theme="light"] .qa a,
+:root[data-theme="light"] .csv span:nth-child(odd),
+:root[data-theme="light"] .pop-ring span {
+  color: color-mix(in srgb, var(--accent) 72%, #1c100a);
+}
+:root[data-theme="light"] .grad {
+  background: linear-gradient(100deg, color-mix(in srgb, var(--accent) 88%, #7d1d00) 0%,
+    color-mix(in srgb, var(--accent) 62%, #b8461a) 45%, color-mix(in srgb, var(--focus-tint) 88%, #7d1d00) 100%);
+  -webkit-background-clip: text; background-clip: text;
+}
+:root[data-theme="light"] .swatch[aria-pressed="true"] {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(23, 18, 16, 0.35), 0 6px 18px -4px var(--f);
+}
+
+/* ── quiet fills on the light page ── */
+:root[data-theme="light"] .tile:hover { border-color: rgba(23, 18, 16, 0.17); }
+:root[data-theme="light"] .mini-tasks li,
+:root[data-theme="light"] .insight,
+:root[data-theme="light"] .source,
+:root[data-theme="light"] .csv span,
+:root[data-theme="light"] .menubar,
+:root[data-theme="light"] .mac-bar,
+:root[data-theme="light"] .fp > div,
+:root[data-theme="light"] .guard-pill,
+:root[data-theme="light"] .layers span,
+:root[data-theme="light"] .qa {
+  background: rgba(255, 255, 255, 0.58);
+  border-color: rgba(23, 18, 16, 0.09);
+}
+:root[data-theme="light"] .mini-tasks li.is-active {
+  background: color-mix(in srgb, var(--focus-tint) 12%, rgba(255, 255, 255, 0.55));
+}
+:root[data-theme="light"] .insight em,
+:root[data-theme="light"] .example,
+:root[data-theme="light"] .qa summary::after,
+:root[data-theme="light"] .mb-item.is-open {
+  background: rgba(23, 18, 16, 0.07);
+}
+:root[data-theme="light"] .qa[open] {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(23, 18, 16, 0.14);
+}
+:root[data-theme="light"] .qa summary::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 3.5v9M3.5 8h9' stroke='%23171210' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+:root[data-theme="light"] .qa[open] summary::after {
+  background-color: color-mix(in srgb, var(--accent) 24%, transparent);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 3.5v9M3.5 8h9' stroke='%23ffffff' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+/* hairlines, ticks and tracks */
+:root[data-theme="light"] .mini-tasks .check,
+:root[data-theme="light"] .week span,
+:root[data-theme="light"] .flow-row .check { border-color: rgba(23, 18, 16, 0.26); }
+:root[data-theme="light"] .pips i,
+:root[data-theme="light"] .xp,
+:root[data-theme="light"] .hud-goal .t,
+:root[data-theme="light"] .orbit .t,
+:root[data-theme="light"] .pop-ring .t,
+:root[data-theme="light"] .mb-item .t { stroke: rgba(23, 18, 16, 0.12); }
+:root[data-theme="light"] .pips i,
+:root[data-theme="light"] .xp { background: rgba(23, 18, 16, 0.10); }
+:root[data-theme="light"] .cal-grid {
+  background-image: repeating-linear-gradient(180deg, rgba(23, 18, 16, 0.08) 0 1px, transparent 1px 68px);
+}
+:root[data-theme="light"] .ev.import {
+  background: repeating-linear-gradient(135deg, rgba(23, 18, 16, 0.05) 0 6px, rgba(23, 18, 16, 0.025) 6px 12px);
+  border-color: rgba(23, 18, 16, 0.2);
+}
+:root[data-theme="light"] .flow-desc { border-top-color: rgba(23, 18, 16, 0.1); }
+:root[data-theme="light"] .source i.ics { background: rgba(23, 18, 16, 0.5); }
+
+/* ── footer ── */
+:root[data-theme="light"] .footer {
+  background: linear-gradient(180deg, rgba(250, 242, 238, 0.4), rgba(250, 242, 238, 0.96));
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   TRUE LIGHT: the hero video and the scene photograph become faint, washed
+   textures behind a light scrim. Every word and control on the page is then
+   dark-on-light — no dark islands left in system light mode.
+   ═══════════════════════════════════════════════════════════════════════ */
+:root[data-theme="light"] .hero { color: var(--text-primary); }
+:root[data-theme="light"] .hero-media { opacity: .2; }
+:root[data-theme="light"] .hero-scrim {
+  background:
+    radial-gradient(120% 90% at 78% 40%, transparent 0%, rgba(250, 242, 238, 0.45) 55%, rgba(250, 242, 238, 0.92) 100%),
+    linear-gradient(90deg, rgba(250, 242, 238, 0.96) 0%, rgba(250, 242, 238, 0.82) 42%, rgba(250, 242, 238, 0.52) 100%),
+    linear-gradient(180deg, rgba(250, 242, 238, 0.8) 0%, transparent 22%, transparent 62%, var(--page) 100%);
+}
+:root[data-theme="light"] .hero h1 { text-shadow: none; }
+:root[data-theme="light"] .hero-lead { color: var(--text-secondary); }
+:root[data-theme="light"] .hero .resume-pill {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(23, 18, 16, 0.12);
+}
+:root[data-theme="light"] .tile-scene { color: var(--text-primary); }
+:root[data-theme="light"] .tile-scene .tile-bg { opacity: .16; }
+:root[data-theme="light"] .tile-scene::after {
+  background: linear-gradient(180deg, rgba(250, 242, 238, 0.3), rgba(250, 242, 238, 0.9) 78%);
+}
+:root[data-theme="light"] .tile-scene:hover .tile-bg { opacity: .26; }
+:root[data-theme="light"] .tile-scene > p { color: var(--text-secondary); }
+:root[data-theme="light"] .tile-scene .tile-icon { color: color-mix(in srgb, var(--accent) 72%, #1c100a); }
+:root[data-theme="light"] .scene-btn {
+  color: var(--text-primary);
+  background: var(--surface-1);
+  border-color: rgba(23, 18, 16, 0.10);
+}
+:root[data-theme="light"] .scene-btn img { opacity: .16; }
+:root[data-theme="light"] .scene-btn::after {
+  background: linear-gradient(180deg, rgba(250, 242, 238, 0.32), rgba(250, 242, 238, 0.92) 78%);
+}
+:root[data-theme="light"] .scene-btn:hover { border-color: rgba(23, 18, 16, 0.22); }
+:root[data-theme="light"] .scene-btn:hover img { opacity: .26; }
+:root[data-theme="light"] .scene-btn[aria-pressed="true"] { border-color: #171210; }
+:root[data-theme="light"] .scene-mood {
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--text-secondary);
 }

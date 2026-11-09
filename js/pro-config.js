@@ -11,18 +11,18 @@ const ProConfig = (() => {
     { key: 'themes', title: 'Exclusive Themes and Customizability', desc: 'Fully customize your workspace with exclusive designs.' }
   ];
   const FREE = {
-    musicTracks: 5,
+    musicTracks: 6,
     freeThemes: ['ember'],
     insightCards: [],
     notes: [
-      'Music: 5 free tracks across genres (Lo-Fi, Jazz, Ambient, Piano, Nature).',
+      'Music: 6 free tracks across genres (Lo-Fi, Jazz, Ambient, Piano, Nature).',
       'Themes: Ember only. Every other theme — light or dark — is Focus Pro.',
       'Insights: the Insights tab, its cards and the Focus Fingerprint are Focus Pro.',
       'Reports: the Breakdown tab is Focus Pro.',
       'Unlimited music, all themes, Insights, the Fingerprint and Breakdown require Focus Pro.'
     ],
     freeLimitsText: [
-      'Music: 5 tracks free. The full library is Focus Pro.',
+      'Music: 6 tracks free. The full library is Focus Pro.',
       'Insights & Breakdown: Focus Pro.',
       'Focus Fingerprint: Focus Pro.',
       'Themes: Ember is free. All other themes are Focus Pro.'

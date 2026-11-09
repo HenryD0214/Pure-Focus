@@ -14,6 +14,8 @@ window.Home = (() => {
 
   const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
   const reducedMotion = () => motionQuery.matches;
+  const schemeQuery = window.matchMedia('(prefers-color-scheme: light)');
+  const systemLight = () => { try { return schemeQuery.matches; } catch (_) { return false; } };
 
   const THEMES = {
     ember:    { name: 'Ember',    accent: '#ff6b35', focus: '#e8482b', brk: '#2aa198', long: '#7c5cbf' },
@@ -65,6 +67,26 @@ window.Home = (() => {
 
   // ─────────────────────────  THEME  ─────────────────────────
 
+  /* The homepage follows the system's light/dark preference. There is no
+     switch: a change in the OS updates the page while it is open. */
+  function syncThemeColor() {
+    const meta = $('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', systemLight() ? '#faf2ee' : '#07070a');
+  }
+
+  function syncScheme() {
+    const light = systemLight();
+    document.documentElement.dataset.theme = light ? 'light' : 'dark';
+    syncThemeColor();
+  }
+
+  function initScheme() {
+    syncScheme();
+    const onChange = () => syncScheme();
+    if (schemeQuery.addEventListener) schemeQuery.addEventListener('change', onChange);
+    else if (schemeQuery.addListener) schemeQuery.addListener(onChange);
+  }
+
   function applyTheme(id) {
     const t = THEMES[id] || THEMES.ember;
     const root = document.documentElement.style;
@@ -72,11 +94,10 @@ window.Home = (() => {
     root.setProperty('--focus-tint', t.focus);
     root.setProperty('--break-tint', t.brk);
     root.setProperty('--longbreak-tint', t.long);
-    const meta = $('meta[name="theme-color"]');
     $$('.swatch').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.theme === id)));
     const name = $('#theme-name');
     if (name) name.textContent = t.name;
-    if (meta) meta.setAttribute('content', '#07070a');
+    syncThemeColor();
   }
 
   function initTheme() {
@@ -534,6 +555,7 @@ window.Home = (() => {
 
   function init() {
     safe(initReveal, 'reveal');
+    safe(initScheme, 'scheme');
     safe(initTheme, 'theme');
     safe(initReturning, 'returning');
     safe(initResumePill, 'resume');

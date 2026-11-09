@@ -1,3 +1,6 @@
 # Local helper secrets (serve.py writes the Canvas token here, mode 0600). Never commit.
 .pf-local/
 __pycache__/
+
+# macOS Finder metadata
+.DS_Store

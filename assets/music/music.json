@@ -1,7 +1,7 @@
 {
  "version": 2,
  "soundVersion": 1,
- "generated": "2026-10-30",
+ "generated": "2026-11-09",
  "loudness": {
   "standard": "ITU-R BS.1770-4 / EBU R128 (Tech 3341, 3342)",
   "musicTargetLufs": -16,
@@ -15,9 +15,9 @@
   "note": "Track loudness fields are null until the import script measures the downloaded files; players treat null as gainDb 0."
  },
  "budget": {
-  "maxBytes": 250000000,
+  "maxBytes": 260000000,
   "estimatedBytes": 249618454,
-  "actualBytes": 249618454
+  "actualBytes": 253117714
  },
  "genres": [
   {
@@ -1192,6 +1192,48 @@
    "bitrateKbps": 117,
    "bpm": 85,
    "sha256": "6ec2f3d0c8eb5addac40ab6b2c0969829fefd6bda4c49978a033dc4b2ac1fc27"
+  },
+  {
+   "id": "kb-sound-poem",
+   "title": "Sound Poem",
+   "artist": "Ken Berman",
+   "composer": null,
+   "energy": 2,
+   "moods": [
+    "calm",
+    "warm"
+   ],
+   "licence": "Used with permission",
+   "licenceUrl": null,
+   "credit": "\"Sound Poem\" Ken Berman · Used with permission of the artist",
+   "sourceUrl": null,
+   "pageUrl": null,
+   "isrc": null,
+   "genre": "Jazz",
+   "file": "Jazz/kb-sound-poem.m4a",
+   "format": "m4a",
+   "transcode": {
+    "from": "mp3",
+    "sourceBytes": 5860668,
+    "cmd": "afconvert -f m4af -d aac -b 112000 -s 2 -q 127 \"$IN\" \"$OUT\""
+   },
+   "encoding": "AAC-LC 112k VBR-constrained",
+   "bytes": 3499260,
+   "lufs": -31.07,
+   "lra": 5.4,
+   "truePeakDb": -12.73,
+   "gainDb": 10,
+   "limited": false,
+   "inSec": 5.1,
+   "outSec": 237.45,
+   "headFadeSec": 7.4,
+   "tailFadeSec": 2.8,
+   "durationSec": 244.19,
+   "sampleRate": 44100,
+   "channels": 2,
+   "bitrateKbps": 113,
+   "bpm": null,
+   "sha256": "d1cf8971491b3f7c57ec8cfbc21ad0a82bfd2fd3de8a0bc51e97aaa7a91479ef"
   },
   {
    "id": "km-relaxing-piano-music",

@@ -63,8 +63,10 @@ const CloudRef = (() => {
       'autoStartBreaks', 'autoStartFocus', 'tickingEnabled', 'dailyGoalMinutes', 'showCompletedTasks',
       'themeID', 'engagementMode', 'celebrations', 'celebrationSounds', 'switchToBreakSound',
       'selectedAlarm', 'selectedAmbience', 'selectedMusic', 'alarmVolume', 'ambienceVolume', 'musicVolume', 'tickVolume',
-      'sceneID', 'sceneDim', 'sceneTintWash',
+      'musicNormalize', 'musicCrossfade',
+      'sceneID', 'sceneDim', 'sceneQuality',
       'colorScheme', 'auroraIntensity',
+      'reduceMotion',
       // v2-guard: synced settings (guardIdleAPI/guardNotify are device capabilities but still sync preferences)
       'guardEnabled', 'guardIdle', 'guardIdleSeconds', 'guardNudge', 'guardNudgeAfter', 'guardNudgeSound',
       'guardIdleAPI', 'guardNotify',
@@ -75,7 +77,8 @@ const CloudRef = (() => {
       'coachEnabled', 'coachConnection', 'coachMonthlyBudgetUSD']),
     CAL_PREF_KEYS: Object.freeze(['weekStartsOn', 'showWeekends', 'planDayStart', 'planDayEnd', 'eventBuffer',
       'maxPlannedFocus', 'showPlanPanel', 'blockReminders', 'reminderLead',
-      'promoteAssignments', 'assignmentHorizonDays', 'planRangeDays', 'showNextEventInUpNext', 'weekPlan']),
+      'promoteAssignments', 'assignmentHorizonDays', 'planRangeDays', 'showNextEventInUpNext', 'weekPlan',
+      'showLocalBlocks', 'showDueTasks', 'showSessionTraces', 'assignmentDone']),
   });
   const NO_TOMB = new Set(C.NEVER_TOMBSTONED);
 

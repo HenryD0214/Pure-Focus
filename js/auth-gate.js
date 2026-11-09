@@ -39,6 +39,7 @@ const AuthGate = (() => {
 
   function lock() {
     document.documentElement.classList.add('auth-locked');
+    try { if (typeof Settings !== 'undefined' && Settings.applyTheme) Settings.applyTheme(); } catch (_) {}
     if (!gate.open) {
       try { gate.showModal(); } catch (_) { gate.setAttribute('open', ''); }
     }
@@ -47,6 +48,8 @@ const AuthGate = (() => {
   function unlock() {
     document.documentElement.classList.remove('auth-locked');
     if (gate.open) { try { gate.close(); } catch (_) {} }
+    // The gate followed the OS scheme; repaint the saved appearance now.
+    try { if (typeof Settings !== 'undefined' && Settings.applyTheme) Settings.applyTheme(); } catch (_) {}
   }
 
   function setStatus(message, kind) {

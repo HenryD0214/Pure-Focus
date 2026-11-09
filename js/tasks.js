@@ -835,6 +835,18 @@ const Tasks = (() => {
     return m[t.externalSource] || 'a calendar';
   }
 
+  /* Canvas's feed hands out calendar links; open the assignment page instead when we can. */
+  function externalURL(t) {
+    if (!t || !t.url) return '';
+    try {
+      if (t.externalSource === 'canvas' && typeof Assignments !== 'undefined' && Assignments.canvasURL) {
+        const m = /:a(\d{1,15})$/i.exec(String(t.externalID || ''));
+        return Assignments.canvasURL(t.url, m ? m[1] : null) || t.url;
+      }
+    } catch (_) { /* keep the stored link */ }
+    return t.url;
+  }
+
   function moveTask(fromId, toId) {
     const vis = Store.visibleTasks();
     const from = vis.findIndex((t) => sameID(t.id, fromId));
@@ -1197,7 +1209,7 @@ const Tasks = (() => {
       items.push({ label: 'Subtasks, notes & details…', icon: 'more', run: () => openSheet(t) });
       items.push({ label: 'Save as template', icon: 'plus', run: () => { Store.addTemplate(t.title, t.estimate); toast('Saved as a template'); } });
     }
-    if (t.url) items.push({ label: `Open in ${sourceName(t)}`, hint: '↗', icon: 'chev', run: () => { try { window.open(t.url, '_blank', 'noopener'); } catch (_) {} } });
+    if (t.url) items.push({ label: `Open in ${sourceName(t)}`, hint: '↗', icon: 'chev', run: () => { try { window.open(externalURL(t), '_blank', 'noopener'); } catch (_) {} } });
     items.push({ sep: true });
     items.push({ label: 'Delete', icon: 'trash', danger: true, run: () => removeTask(t) });
     openMenu(anchor, items, { label: `Options for ${t.title}`, width: 260 });

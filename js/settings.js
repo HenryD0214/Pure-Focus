@@ -262,11 +262,13 @@ const Settings = (() => {
 
   let previewID = null;
 
+  function systemScheme() {
+    try { return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; } catch (_) { return 'dark'; }
+  }
+
   function effectiveScheme() {
     const s = Store.settings().colorScheme;
-    if (s === 'system') {
-      try { return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; } catch (_) { return 'dark'; }
-    }
+    if (s === 'system') return systemScheme();
     return s === 'light' ? 'light' : 'dark';
   }
 
@@ -305,9 +307,13 @@ const Settings = (() => {
     const before = `${root.dataset.pfTheme}|${root.dataset.theme}`;
     setData(root, 'pfTheme', effectiveThemeID(previewID || Store.theme().id));
     const scheme = effectiveScheme();
-    const adapt = adaptsToScene(scheme);
+    // The sign-in screen always follows the OS scheme, whatever the saved
+    // appearance is. AuthGate.unlock() repaints the saved choice.
+    const locked = root.classList.contains('auth-locked');
+    const painted = locked ? systemScheme() : scheme;
+    const adapt = !locked && adaptsToScene(scheme);
     setData(root, 'schemePref', scheme);
-    setData(root, 'theme', adapt ? 'dark' : scheme);
+    setData(root, 'theme', adapt ? 'dark' : painted);
     root.classList.toggle('scene-adapt', adapt);
     const aurora = String(s.auroraIntensity);
     if (root.style.getPropertyValue('--aurora') !== aurora) root.style.setProperty('--aurora', aurora);
@@ -327,7 +333,7 @@ const Settings = (() => {
     // Appearance "Auto" follows the OS live.
     try {
       const mq = window.matchMedia('(prefers-color-scheme: light)');
-      const onScheme = () => { if (Store.settings().colorScheme === 'system') applyTheme(); };
+      const onScheme = () => { if (Store.settings().colorScheme === 'system' || document.documentElement.classList.contains('auth-locked')) applyTheme(); };
       if (mq.addEventListener) mq.addEventListener('change', onScheme); else if (mq.addListener) mq.addListener(onScheme);
     } catch (_) { /* no matchMedia: Auto stays dark */ }
     // When a video scene ends, the chosen scheme comes back.

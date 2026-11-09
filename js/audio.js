@@ -147,6 +147,7 @@ const Audio = (() => {
     'km-deliberate-thought', // Ambient
     'km-dreamer',          // Piano
     'hz-kodama',           // Nature
+    'kb-sound-poem',       // Jazz
   ];
   const FREE_FILES = {
     'hz-tranquil-mindscape': 'hz-tranquil-mindscape.m4a',
@@ -154,6 +155,7 @@ const Audio = (() => {
     'km-deliberate-thought': 'km-deliberate-thought.m4a',
     'km-dreamer': 'km-dreamer.m4a',
     'hz-kodama': 'hz-kodama.m4a',
+    'kb-sound-poem': 'kb-sound-poem.m4a',
   };
 
   function freeTrack(t) {
@@ -314,10 +316,18 @@ const Audio = (() => {
     return { history: P.history, liked: P.liked, plays: P.plays, earlySkips: counts, counter: P.counter, dayKey: todayKey() };
   }
 
-  function pickFrom(src) {
+  function pickFrom(src, excludeId) {
     const pool = poolFor(src);
     if (!pool.length) return null;
-    const r = PFSound.nextTrack(pool, nextState(), src);
+    // Never hand back the track that is already playing (a resumed track sits
+    // outside the history, so the weighted pick can otherwise choose it again).
+    const ex = excludeId != null ? excludeId : (M.track && M.track.id);
+    let use = pool;
+    if (ex && pool.length > 1) {
+      const rest = pool.filter((t) => lc(t.id) !== lc(ex));
+      if (rest.length) use = rest;
+    }
+    const r = PFSound.nextTrack(use, nextState(), src);
     P.counter += 1;
     return r ? trackById(r.id) : null;
   }
@@ -783,7 +793,10 @@ const Audio = (() => {
 
   function computeNext(force) {
     if (!M.track) { M.next = null; M.plan = null; return null; }
-    if (!M.next || force) {
+    // A planned track that is somehow the current one is not a valid "next"
+    // (pool size > 1): recompute it instead of replaying the same song.
+    const stale = M.next && lc(M.next.id) === lc(M.track.id) && poolFor(source() || M.sourceId).length > 1;
+    if (!M.next || force || stale) {
       let n = pickFrom(source() || M.sourceId);
       if (!n) n = M.track;                               // single-track or emptied pool: replay
       M.next = n;
@@ -1076,6 +1089,7 @@ const Audio = (() => {
     ensureGraph();
     resumeCtx();
     const d = activeDeck();
+    if (d.el.ended) { try { d.el.currentTime = 0; } catch (_) {} }
     setStatus(!d.el.paused && d.el.readyState >= 3 ? 'playing' : 'loading');
     fadeInActive(fadeSec);
     startProgress();
@@ -1138,7 +1152,7 @@ const Audio = (() => {
       return;
     }
     if (M.track && inPool(M.track, src)) {
-      if (!M.playing) startPlayback(takeFade(FADES.resume));
+      if (!M.playing || !deckRunning()) startPlayback(takeFade(FADES.resume));
       else takeFade(0);
       return;
     }
@@ -1244,7 +1258,21 @@ const Audio = (() => {
   function toggleMusic() {
     unlock();
     if (ST.state === 'error') { retryMusic(); return; }
-    if (M.playing && !M.deferred) { pauseMusic(); return; }
+    if (M.playing && !M.deferred) {
+      if (deckRunning()) { pauseMusic(); return; }
+      // The flags say "playing" but the element stopped behind our back (OS audio
+      // route change, sleep/wake, a file that ended during a transition). Restart
+      // it here instead of making the person reload the whole app.
+      const d = activeDeck();
+      if (M.track && (d.el.ended || d.el.error || !d.el.getAttribute('src'))) setCurrent(M.track, M.track.inSec || 0, true);
+      M.deferred = false;
+      pendingStart.music = false;
+      setStatus('loading');
+      fadeInActive(FADES.resume);
+      startProgress(); armSchedule();
+      emit('music', musicPayload());
+      return;
+    }
     if (!source()) return;
     playMusic(null);
   }
@@ -1367,6 +1395,11 @@ const Audio = (() => {
   }
 
   function currentTrack() { return M.track; }
+  function deckRunning() {
+    if (!M.track || !M.playing || M.deferred) return false;
+    const d = activeDeck();
+    return !!d && !d.el.paused && !d.el.ended && !d.el.error;
+  }
   function isMusicPlaying() { return !!M.track && M.playing && !M.deferred; }
   function upNext() { return M.track ? computeNext() : null; }
 
@@ -1950,7 +1983,16 @@ const Audio = (() => {
       // a touch pointerdown doesn't count as a user gesture on iOS: the end of the tap does
       document.addEventListener('touchend', onGesture, true);
       document.addEventListener('click', onGesture, true);
-      document.addEventListener('visibilitychange', () => { if (document.hidden) savePlayerState(); else emitProgress(true); });
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) savePlayerState();
+        else {
+          resumeCtx();
+          // Browsers may pause an <audio> element while the tab is hidden or after
+          // the device wakes; resume it rather than waiting for a reload.
+          if (M.playing && !M.deferred && M.track && activeDeck().el.paused && !activeDeck().el.ended) fadeInActive(FADES.resume);
+          emitProgress(true);
+        }
+      });
     }
     if (typeof window !== 'undefined') window.addEventListener('pagehide', savePlayerState);
   }

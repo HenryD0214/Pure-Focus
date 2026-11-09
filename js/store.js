@@ -119,13 +119,16 @@ const Store = (() => {
     selectedMusic: '',        // genre id · 'station:<id>' · ''
     musicVolume: 0.7,         // v2-sound: slider position (amplitude = v²)
     themeID: 'ember',
+    sceneID: '',
+    sceneDim: -1,
+    sceneQuality: 'auto',
     dailyGoalMinutes: 120,
     showCompletedTasks: false,
     auroraIntensity: 0.6,
     reduceMotion: false,
     tickVolume: 0.3,
     switchToBreakSound: true,
-    colorScheme: 'dark',      // 'dark' | 'light' | 'system'
+    colorScheme: 'system',     // 'dark' | 'light' | 'system'
     engagementMode: 'full',   // rewards layer: 'full' | 'calm' | 'off'
     celebrations: 'full',     // reward moments: 'full' | 'subtle' | 'off'
     celebrationSounds: true,
@@ -183,6 +186,7 @@ const Store = (() => {
     weekPlan: [],
     showLocalBlocks: true,
     showDueTasks: true,
+    assignmentDone: {},      // assignment id (lowercase) → true (done) | false (explicitly open)
   };
 
   // New task fields (SPEC §1.2.1 + SPEC-V2 §4.3); every one defaults to null.
@@ -285,11 +289,18 @@ const Store = (() => {
       return Math.min(480, Math.max(15, Math.round(n / 15) * 15));
     },
     themeID: (v) => oneOf(v, THEME_IDS, 'ember'),
-    colorScheme: (v) => oneOf(v, ['dark', 'light', 'system'], 'dark'),
+    colorScheme: (v) => oneOf(v, ['dark', 'light', 'system'], 'system'),
     engagementMode: (v) => oneOf(v, ['full', 'calm', 'off'], 'full'),
     celebrations: (v) => oneOf(v, ['full', 'subtle', 'off'], 'full'),
     selectedMusic: (v) => (typeof v === 'string' ? v : ''),
     musicCrossfade: (v) => oneOf(v, ['auto', 'off'], 'auto'),
+    sceneID: (v) => (typeof v === 'string' && /^[a-z0-9-]*$/.test(v) ? v : ''),
+    sceneDim: (v) => {
+      const n = Number(v);
+      if (!Number.isFinite(n)) return -1;
+      return n < 0 ? -1 : Math.min(0.8, n);
+    },
+    sceneQuality: (v) => oneOf(v, ['auto', '1080p', '4k', 'still'], 'auto'),
     guardIdleSeconds: (v) => oneOf(Number(v), [60, 120, 180, 300], 120),
     guardNudgeAfter: (v) => oneOf(Number(v), [60, 120, 180, 300], 120),
     guardAutoPauseAfter: (v) => oneOf(Number(v), [180, 300, 600], 300),
@@ -342,6 +353,18 @@ const Store = (() => {
     return cap && out.length > cap ? out.slice(out.length - cap) : out;   // FIFO: keep the newest
   };
 
+  /* assignment id (lowercase) → boolean. Kept small: at most 500 remembered ticks. */
+  function normalizeAssignmentDone(v) {
+    const out = {};
+    if (!isObj(v)) return out;
+    for (const [k, val] of Object.entries(v)) {
+      if (typeof k !== 'string' || !k || typeof val !== 'boolean') continue;
+      out[k.toLowerCase()] = val;
+      if (Object.keys(out).length >= 500) break;
+    }
+    return out;
+  }
+
   function normalizeCalendar(c) {
     const src = isObj(c) ? c : {};
     const p = isObj(src.prefs) ? src.prefs : {};
@@ -350,6 +373,7 @@ const Store = (() => {
     prefs.collapsedGroups = strList(p.collapsedGroups);
     prefs.collapsedSections = strList(p.collapsedSections);
     prefs.weekPlan = Array.isArray(p.weekPlan) ? p.weekPlan.filter(isObj).slice(0, 7) : [];
+    prefs.assignmentDone = normalizeAssignmentDone(p.assignmentDone);
     prefs.assignmentHorizonDays = oneOf(Number(prefs.assignmentHorizonDays), [1, 2, 3, 7], 2);
     prefs.planRangeDays = intIn(prefs.planRangeDays, 3, 14, 7);
     prefs.hourHeight = intIn(prefs.hourHeight, 40, 112, 56);

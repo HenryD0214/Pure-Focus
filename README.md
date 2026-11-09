@@ -69,7 +69,7 @@ backend/
   supabase.sql    the tables, RPCs and RLS policies the cloud engine expects
 assets/
   sounds/         13 generated WAVs (6 alarms, 6 ambiences, 1 tick)
-  music/          52 tracks in 9 genres, music.json (the catalogue), CREDITS.txt
+  music/          53 tracks in 9 genres, music.json (the catalogue), CREDITS.txt
   scenes/         scenes.json — the scene catalogue (videos stream from Mixkit)
 ```
 
@@ -199,9 +199,9 @@ own chart palette, their own surfaces, and their own text tokens.
 
 The 13 WAVs in `assets/sounds/` are synthesised by
 `~/PureFocus/Scripts/generate_sounds.swift` — no samples were downloaded.
-The 52 music tracks in `assets/music/` are listed in `music.json` with their
+The 53 music tracks in `assets/music/` are listed in `music.json` with their
 licence, source and loudness measurements, and credited in `CREDITS.txt`.
-They are AAC (`.m4a`) to stay inside the library's 250 MB budget.
+They are AAC (`.m4a`) to stay inside the library's 260 MB budget.
 
 Browser autoplay rules apply: sound only starts after the first click or
 keystroke on the page.

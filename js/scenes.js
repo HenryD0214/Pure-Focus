@@ -91,14 +91,81 @@ const Scenes = (() => {
     return out;
   }
 
-  function loadPrefs() {
-    try { return normalise(JSON.parse(localStorage.getItem(STORE_KEY) || 'null')); } catch (_) { return { ...DEFAULTS }; }
+  // The account owns the chosen background, quality and dim; the poster URL stays
+  // device-local (it is derived from the catalogue and can be large).
+  let applyingStore = false;
+
+  function storeSettings() {
+    try { return (typeof Store !== 'undefined' && Store.settings) ? Store.settings() : null; } catch (_) { return null; }
+  }
+  function fromStore(s) {
+    return normalise({ sceneId: s.sceneID, quality: s.sceneQuality, dim: s.sceneDim });
   }
 
-  function savePrefs() {
+  function loadPrefs() {
+    let local = { ...DEFAULTS };
+    try { local = normalise(JSON.parse(localStorage.getItem(STORE_KEY) || 'null')); } catch (_) {}
+    const s = storeSettings();
+    if (!s) return local;
+    const storeCustom = (s.sceneID || '') !== '' || Number(s.sceneDim) >= 0 || (s.sceneQuality && s.sceneQuality !== 'auto');
+    const localCustom = local.sceneId !== '' || local.dim >= 0 || local.quality !== 'auto';
+    if (storeCustom) {
+      const from = fromStore(s);
+      // keep the remembered poster only when it belongs to the same scene
+      return { ...from, poster: from.sceneId === local.sceneId ? local.poster : '' };
+    }
+    if (localCustom) {
+      // one-time: this device's existing background becomes the account's setting
+      try {
+        Store.bulk(() => {
+          Store.setSetting('sceneID', local.sceneId);
+          Store.setSetting('sceneDim', local.dim);
+          Store.setSetting('sceneQuality', local.quality);
+        });
+      } catch (_) {}
+    }
+    return local;
+  }
+
+  function saveLocal() {
     try {
       localStorage.setItem(STORE_KEY, JSON.stringify({ sceneId: prefs.sceneId, quality: prefs.quality, dim: prefs.dim, poster: prefs.poster }));
     } catch (_) { /* private mode — the scene still works for this visit */ }
+  }
+
+  function savePrefs() {
+    saveLocal();
+    const s = storeSettings();
+    if (!s) return;
+    if ((s.sceneID || '') === prefs.sceneId && Number(s.sceneDim) === prefs.dim && (s.sceneQuality || 'auto') === prefs.quality) return;
+    applyingStore = true;
+    try {
+      Store.bulk(() => {
+        if ((s.sceneID || '') !== prefs.sceneId) Store.setSetting('sceneID', prefs.sceneId);
+        if (Number(s.sceneDim) !== prefs.dim) Store.setSetting('sceneDim', prefs.dim);
+        if ((s.sceneQuality || 'auto') !== prefs.quality) Store.setSetting('sceneQuality', prefs.quality);
+      });
+    } finally { applyingStore = false; }
+  }
+
+  /* A settings change from another device (or a cloud pull) adopts the account's scene. */
+  function applyStoreSettings() {
+    if (applyingStore) return;
+    const s = storeSettings();
+    if (!s) return;
+    const next = fromStore(s);
+    if (next.sceneId === prefs.sceneId && next.quality === prefs.quality && next.dim === prefs.dim) return;
+    const sceneChanged = next.sceneId !== prefs.sceneId;
+    prefs.sceneId = next.sceneId;
+    prefs.quality = next.quality;
+    prefs.dim = next.dim;
+    if (sceneChanged) {
+      const sc = catalogue ? byId.get(next.sceneId) : null;
+      prefs.poster = sc ? safeHttps(sc.poster) : '';
+    }
+    saveLocal();
+    render();
+    if (sceneChanged) emit();
   }
 
   // ── tiny DOM helpers (no innerHTML anywhere) ──
@@ -1193,6 +1260,13 @@ const Scenes = (() => {
       clearTimeout(resizeT);
       resizeT = setTimeout(syncControls, 200);
     });
+
+    // The account's settings changed (another device, a cloud pull, or Settings › Background).
+    try {
+      Store.on('change', (kind) => {
+        if (kind === 'settings' || kind === 'remote' || kind === 'bulk' || kind === 'reset') applyStoreSettings();
+      });
+    } catch (_) {}
 
     // Another tab changed the background.
     window.addEventListener('storage', (e) => {

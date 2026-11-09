@@ -91,6 +91,25 @@ const Assignments = (() => {
     return null;
   }
 
+  /* Canvas's calendar feed links every assignment to the *calendar* ("…/calendar?include_contexts=
+     course_9#assignment_48213"). People expect the assignment page itself, so rewrite it when the
+     feed tells us the course. */
+  const CANVAS_AID = /:a(\d{1,15})$/i;
+  function canvasURL(url, aid) {
+    const raw = String(url == null ? '' : url).trim();
+    if (!/^https:\/\//i.test(raw)) return null;
+    let u;
+    try { u = new URL(raw); } catch (_) { return null; }
+    if (!/(^|\.)instructure\.com$/i.test(u.hostname)) return null;
+    const id = aid != null && /^\d{1,15}$/.test(String(aid)) ? String(aid) : canvasAssignmentID(null, raw);
+    if (!id) return null;
+    if (/\/courses\/\d{1,15}\/assignments\/\d{1,15}/i.test(u.pathname)) return raw;
+    const ctx = u.searchParams.get('include_contexts') || '';
+    const cm = /(?:^|[,&\s])course_(\d{1,15})(?=$|[,&\s])/i.exec(ctx);
+    if (!cm) return null;
+    return `${u.protocol}//${u.host}/courses/${cm[1]}/assignments/${id}`;
+  }
+
   function classifyKind(title) {
     const t = String(title || '').toLowerCase();
     if (/\b(midterm|final exam|exam|test)\b/.test(t)) return 'exam';
@@ -116,7 +135,10 @@ const Assignments = (() => {
     if (e.recurring && !(provider === 'canvas' && aid != null)) id += `@${(e.allDay ? e.startDay : e.startDayLocal) ?? ''}`;   // each date of a series is its own due date
     const courseKey = course ? 'code:' + course.toLowerCase() : null;
     const allDay = !!e.allDay;
-    const url = String(e.url || '').toLowerCase().startsWith('https://') ? e.url : null;
+    const rawUrl = String(e.url || '');
+    const url = provider === 'canvas'
+      ? (canvasURL(rawUrl, aid) || (/^https:\/\//i.test(rawUrl) ? rawUrl : null))
+      : (/^https:\/\//i.test(rawUrl) ? rawUrl : null);
     return {
       id,
       source: provider === 'canvas' || provider === 'blackbaud' ? provider : 'ics',
@@ -279,6 +301,13 @@ const Assignments = (() => {
       fetched: isObj(parsed) && isObj(parsed.fetched) ? parsed.fetched : {},
       promoted: isObj(parsed) && isObj(parsed.promoted) ? parsed.promoted : {},
     };
+    // older caches kept the Canvas calendar link; point them at the assignment itself
+    for (const a of cache.items) {
+      if (a.source !== 'canvas' || !a.url) continue;
+      const m = CANVAS_AID.exec(String(a.id || ''));
+      const direct = canvasURL(a.url, m ? m[1] : null);
+      if (direct) a.url = direct;
+    }
     loadedKey = k;
     return cache;
   }
@@ -598,7 +627,7 @@ const Assignments = (() => {
   }
 
   return {
-    detectProvider, fromICS, promotions, estimatePomodoros, courseFactor, dedupe, splitCourse, canvasAssignmentID,
+    detectProvider, fromICS, promotions, estimatePomodoros, courseFactor, dedupe, splitCourse, canvasAssignmentID, canvasURL,
     classifyKind, dedupeKey,
     init, list, get, promote, unpromote, dismiss, courseKeys, refreshPromotions, replaceFeed, dropFeed, comingUp,
     isAssignmentTask, factors,

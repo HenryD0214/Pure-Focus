@@ -531,6 +531,63 @@ const CalendarView = (() => {
     if (pop) positionPop();
   }
 
+  /* The task a running focus session belongs to (null when no focus session runs). */
+  function focusingTaskID() {
+    try {
+      if (typeof Timer === 'undefined' || !Timer.state) return null;
+      const s = Timer.state();
+      return s && s.running && s.mode === 'focus' && s.taskID ? s.taskID : null;
+    } catch (_) { return null; }
+  }
+  function isFocusingTask(taskID) {
+    const id = focusingTaskID();
+    return !!id && taskID != null && lowerEq(id, taskID);
+  }
+  function focusBtnLabel(taskID, fallback) {
+    return isFocusingTask(taskID) ? 'Focusing on this' : (fallback || 'Start focus');
+  }
+
+  /* Canvas assignments can be ticked here without becoming a task. An explicit tick (or
+     untick) is remembered in the synced calendar prefs, so a feed refresh cannot undo it. */
+  function assignmentOverride(id) {
+    const m = prefs().assignmentDone;
+    if (!m || typeof m !== 'object') return null;
+    const k = String(id || '').toLowerCase();
+    return Object.prototype.hasOwnProperty.call(m, k) ? !!m[k] : null;
+  }
+  function isAssignmentDone(a) {
+    if (!a) return false;
+    const o = assignmentOverride(a.id);
+    return o === null ? a.submitted === true : o;
+  }
+  function setAssignmentDone(a, done) {
+    if (!a || !a.id) return;
+    const cur = prefs().assignmentDone || {};
+    const next = { ...cur, [String(a.id).toLowerCase()]: !!done };
+    // keep the synced record small: drop the oldest keys beyond 500
+    const keys = Object.keys(next);
+    if (keys.length > 500) for (const k of keys.slice(0, keys.length - 500)) delete next[k];
+    Store.updateCalendar({ prefs: { assignmentDone: next } });
+    invalidate();
+    render();
+    if (pop) positionPop();
+  }
+  /* The checkbox that belongs to a due item: a linked task toggles the task itself,
+     an unpromoted assignment uses the synced override. */
+  function dueCheck(d, cls) {
+    if (d.task) return taskCheck(d.task, null, cls);
+    if (!d.assignment) return null;
+    const done = isAssignmentDone(d.assignment);
+    const tick = (ev) => { ev.stopPropagation(); ev.preventDefault(); setAssignmentDone(d.assignment, !done); };
+    const el = h('span', {
+      class: 'cal-ev-check ' + cls, role: 'checkbox', 'aria-checked': String(done),
+      'aria-label': done ? `Mark “${d.assignment.title}” as not done` : `Mark “${d.assignment.title}” done`,
+      title: done ? 'Done — click to undo' : 'Mark done', onclick: tick,
+    }, icon('check'));
+    el.addEventListener('pointerdown', (ev) => ev.stopPropagation());
+    return el;
+  }
+
   const nowMs = () => Date.now();
   const isPastBlock = (b) => new Date(b.end).getTime() <= nowMs();
   const isActiveBlock = (b) => { const n = nowMs(); return new Date(b.start).getTime() < n && new Date(b.end).getTime() > n; };
@@ -1021,7 +1078,7 @@ const CalendarView = (() => {
         const task = linked.get(String(a.id).toLowerCase()) || null;
         shownAssign.add(String(a.id).toLowerCase());
         out.push({ kind: 'due', id: 'due:' + a.id, day: a.dueDay, minutes: a.dueMinutes, title: a.title, course: a.course,
-          color: feedColor(f) || 'var(--text-secondary)', assignment: a, task, done: !!(task && task.isDone) || a.submitted === true });
+          color: feedColor(f) || 'var(--text-secondary)', assignment: a, task, done: task ? !!task.isDone : isAssignmentDone(a) });
       }
     }
     if (prefs().showDueTasks !== false) {
@@ -1047,14 +1104,17 @@ const CalendarView = (() => {
 
   function dueChip(d, extraCls) {
     const label = d.minutes != null ? dueClock(d.minutes) : 'Due';
-    return h('button', {
-      class: 'cal-due' + (d.done ? ' is-done' : '') + (extraCls ? ' ' + extraCls : ''), type: 'button',
+    const open = (ev) => { ev.stopPropagation(); openPopover(d.id, ev.currentTarget); };
+    const check = dueCheck(d, 'cal-due-check');
+    return h('div', {
+      class: 'cal-due' + (d.done ? ' is-done' : '') + (check ? ' has-check' : '') + (extraCls ? ' ' + extraCls : ''), role: 'button', tabindex: '0',
       dataset: { id: d.id }, vars: { '--ev': d.color },
       title: `${d.title}${d.course ? ' · ' + d.course : ''} · due ${d.minutes != null ? dueClock(d.minutes) : 'today'}`,
       'aria-label': `${d.title}, due ${F.medium.format(parseDayKey(d.day))}${d.minutes != null ? ' ' + F.time.format(dateAt(parseDayKey(d.day), d.minutes)) : ''}${d.done ? ', done' : ''}`,
-      onclick: (ev) => { ev.stopPropagation(); openPopover(d.id, ev.currentTarget); },
+      onclick: open,
+      onkeydown: (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); open(ev); } },
     },
-    h('span', { class: 'cal-due-mark' }, d.done ? icon('check') : null),
+    check || h('span', { class: 'cal-due-mark' }, d.done ? icon('check') : null),
     h('span', { class: 'cal-due-time', text: label }),
     h('span', { class: 'cal-due-name', text: d.title }));
   }
@@ -1573,6 +1633,7 @@ const CalendarView = (() => {
     // to the lines the block has room for, ending on a whole word + "…"; the
     // time line falls back range → start time → hidden.
     const play = task && !slim && end > now && !(tf < wf - 0.001) && !titleOnly;   // no ▶ under a covering block
+    const focusing = !!(task && isFocusingTask(task.id));
     const tpx = slim ? 10 : (vdur < 45 ? 10.5 : 11);
     let fpx = slim || vdur <= 20 ? 11 : 12;
     const visH = s.coverAt != null ? Math.min(boxH, (s.coverAt - vt) * MIN_PX) : boxH;
@@ -1638,9 +1699,12 @@ const CalendarView = (() => {
     }
     if (play) {
       el.appendChild(h('button', {
-        class: 'cal-ev-play', type: 'button', 'aria-label': `Start focus on ${task.title}`, title: 'Start focus',
-        onclick: (ev) => { ev.stopPropagation(); startFocus(task.id, e); },
-      }, icon('play')));
+        class: 'cal-ev-play' + (focusing ? ' is-focusing' : ''), type: 'button',
+        'aria-label': focusing ? `You are already focusing on ${task.title}` : `Start focus on ${task.title}`,
+        title: focusing ? 'You are already focusing on this' : 'Start focus',
+        disabled: focusing,
+        onclick: (ev) => { ev.stopPropagation(); if (!focusing) startFocus(task.id, e); },
+      }, icon(focusing ? 'check' : 'play')));
     }
     if (!e.readOnly && !s.contBottom) el.appendChild(h('div', { class: 'cal-ev-resize', 'aria-hidden': 'true' }));
     return el;
@@ -1812,12 +1876,12 @@ const CalendarView = (() => {
 
   function agendaDueRow(d) {
     const row = h('div', {
-      class: 'cal-ag-row is-due' + (d.done ? ' is-past' : ''), role: 'button', tabindex: '0', dataset: { id: d.id }, vars: { '--ev': d.color },
+      class: 'cal-ag-row is-due' + (d.done ? ' is-past is-done' : ''), role: 'button', tabindex: '0', dataset: { id: d.id }, vars: { '--ev': d.color },
     },
     h('span', { class: 'cal-ag-time', text: d.minutes != null ? `Due ${F.time.format(dateAt(parseDayKey(d.day), d.minutes))}` : 'Due' }),
     h('span', { class: 'cal-ag-bar' }),
     h('span', { class: 'cal-ag-main' },
-      h('span', { class: 'cal-ag-title' }, h('span', { class: 'cal-ag-name', text: d.title })),
+      h('span', { class: 'cal-ag-title' }, dueCheck(d, 'cal-agcheck'), h('span', { class: 'cal-ag-name', text: d.title })),
       d.course ? h('span', { class: 'cal-ag-meta', text: d.course }) : null));
     row.addEventListener('click', () => openPopover(d.id, row));
     row.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); openPopover(d.id, row); } });
@@ -1843,10 +1907,16 @@ const CalendarView = (() => {
     h('span', { class: 'cal-ag-main' },
       h('span', { class: 'cal-ag-title' }, linkedTask ? taskCheck(linkedTask, e.id, 'cal-agcheck') : null, srcIcon(e), h('span', { class: 'cal-ag-name', text: titleOf(e) })),
       meta.length ? h('span', { class: 'cal-ag-meta', text: meta.join(' · ') }) : null),
-    task && end > now ? h('button', {
-      class: 'btn btn-sm cal-ag-play', type: 'button', 'aria-label': `Start focus on ${task.title}`,
-      onclick: (ev) => { ev.stopPropagation(); startFocus(task.id, e); },
-    }, icon('play'), 'Start') : null);
+    task && end > now ? (() => {
+      const focusing = isFocusingTask(task.id);
+      return h('button', {
+        class: 'btn btn-sm cal-ag-play' + (focusing ? ' is-focusing' : ''), type: 'button',
+        'aria-label': focusing ? `You are already focusing on ${task.title}` : `Start focus on ${task.title}`,
+        title: focusing ? 'You are already focusing on this' : 'Start focus',
+        disabled: focusing,
+        onclick: (ev) => { ev.stopPropagation(); if (!focusing) startFocus(task.id, e); },
+      }, icon(focusing ? 'check' : 'play'), focusing ? 'Focusing' : 'Start');
+    })() : null);
     row.addEventListener('click', () => openPopover(e.id, row));
     row.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); openPopover(e.id, row); } });
     return row;
@@ -2544,7 +2614,7 @@ const CalendarView = (() => {
       r = Timer.startFocus({ taskID: t.id, plan, force: true });
     }
     if (r && r.status === 'unavailable') toast('That block can’t start a focus session.');
-    else if (r && r.status === 'alreadyFocusing') App.showView('focus');
+    else if (r && r.status === 'alreadyFocusing') { toast('You’re already focusing on this', 'success'); App.showView('focus'); }
   }
 
   /* A small glass confirmation dialog → Promise<bool>. */
@@ -3318,13 +3388,19 @@ const CalendarView = (() => {
     notes.addEventListener('input', () => { liveEdit(id, (b) => { b.notes = notes.value.slice(0, 2000) || null; b.updatedAt = stamp(); }, { rerender: false }); });
 
     const startBtn = h('button', { class: 'btn btn-sm btn-primary cal-pop-start', type: 'button',
-      onclick: () => { const b = findLocal(id); if (b) startFocus(b.taskID, b); } }, icon('play'), 'Start focus');
+      onclick: () => { const b = findLocal(id); if (b && !isFocusingTask(b.taskID)) startFocus(b.taskID, b); } }, icon('play'), 'Start focus');
 
     function refresh() {
       const b = cur();
       const t = linked();
       titleIn.placeholder = t ? t.title : 'Add title';
       startBtn.hidden = !openTask(b) || isPastBlock(b);
+      const focusing = !!(t && isFocusingTask(t.id));
+      startBtn.disabled = focusing;
+      startBtn.classList.toggle('is-focusing', focusing);
+      startBtn.title = focusing ? 'You are already focusing on this' : '';
+      startBtn.setAttribute('aria-label', focusing ? `You are already focusing on ${t.title}` : 'Start focus');
+      if (startBtn.lastChild && startBtn.lastChild.nodeType === 3) startBtn.lastChild.textContent = focusing ? 'Focusing on this' : 'Start focus';
       paintDot();
       showDur();
       drawType();
@@ -3402,9 +3478,14 @@ const CalendarView = (() => {
       const row = h('div', { class: 'cal-pop-row cal-pop-pftask' }, icon('check', 'cal-pop-ic'));
       if (t && t.isDone) row.appendChild(h('span', { class: 'cal-pop-muted', text: 'Task done' }));
       else if (t) {
-        row.appendChild(h('span', { class: 'cal-pop-text', text: 'On Today’s Tasks' }));
+        const focusing = isFocusingTask(t.id);
+        row.appendChild(h('span', { class: 'cal-pop-text', text: focusing ? 'You are focusing on this' : 'On Today’s Tasks' }));
         row.appendChild(h('span', { class: 'cal-spacer' }));
-        row.appendChild(h('button', { class: 'btn btn-sm btn-primary', type: 'button', onclick: () => startFocus(t.id, null) }, icon('play'), 'Start focus'));
+        row.appendChild(h('button', {
+          class: 'btn btn-sm btn-primary' + (focusing ? ' is-focusing' : ''), type: 'button', disabled: focusing,
+          title: focusing ? 'You are already focusing on this' : 'Start focus',
+          onclick: () => { if (!focusing) startFocus(t.id, null); },
+        }, icon(focusing ? 'check' : 'play'), focusing ? 'Focusing on this' : 'Start focus'));
       } else {
         row.appendChild(h('button', { class: 'btn btn-sm btn-primary', type: 'button',
           onclick: () => { const n = CalendarTasks.add(e); closePopover(); if (n) toast(`Added “${n.title}” to Today’s Tasks`, 'success'); } }, icon('plus'), 'Add to Today’s Tasks'));
@@ -3428,6 +3509,19 @@ const CalendarView = (() => {
     if (a.source === 'blackbaud') return 'Blackbaud';
     const f = feedMap().get(a.feedID);
     return feedName(f) || 'your calendar';
+  }
+
+  /* Canvas feed links point at the calendar; send people to the assignment page instead. */
+  function externalUrlOf(a, t) {
+    const raw = (a && a.url) || (t && t.url) || '';
+    if (!raw) return '';
+    try {
+      if (typeof Assignments !== 'undefined' && Assignments.canvasURL) {
+        const m = /:a(\d{1,15})$/i.exec(String((t && t.externalID) || (a && a.id) || ''));
+        return Assignments.canvasURL(raw, m ? m[1] : null) || raw;
+      }
+    } catch (_) { /* keep the stored link */ }
+    return raw;
   }
 
   // ── descriptions: formatted text, drawn safely ──
@@ -3538,13 +3632,19 @@ const CalendarView = (() => {
       popHead(d.color, h('h3', { class: 'cal-pop-heading', text: d.title })),
       h('div', { class: 'cal-pop-row' }, icon('clock', 'cal-pop-ic'), h('span', { class: 'cal-pop-text', text: when })),
     ];
+    const doneCheck = dueCheck(d, 'cal-pop-duecheck');
+    if (doneCheck) {
+      const label = d.done ? (a && a.submitted && assignmentOverride(a.id) === null ? 'Submitted' : 'Done') : 'Mark done';
+      const row = h('div', { class: 'cal-pop-row cal-pop-done' }, doneCheck, h('span', { class: 'cal-pop-muted', text: label }));
+      kids.push(row);
+    }
     if (d.course) kids.push(h('div', { class: 'cal-pop-row' }, icon('cap', 'cal-pop-ic'), h('span', { class: 'cal-pop-text', text: d.course })));
     if (a) kids.push(h('div', { class: 'cal-pop-row' }, icon('file', 'cal-pop-ic'), h('span', { class: 'cal-pop-muted', text: `From ${sourceName(a)}` })));
     // the assignment's description, as Canvas writes it in the calendar feed (links open in a new tab)
     const desc = (a && a.description) || (d.task && d.task.notes) || '';
     kids.push(...extrasRows(a || {}, desc));
     if (desc.trim()) kids.push(h('div', { class: 'cal-pop-row' }, icon('notes', 'cal-pop-ic'), richDescription(desc)));
-    const url = (a && a.url) || (d.task && d.task.url);
+    const url = externalUrlOf(a, d.task);
     if (url && /^https:\/\//i.test(url)) {
       kids.push(h('div', { class: 'cal-pop-row' }, icon('out', 'cal-pop-ic'),
         h('a', { class: 'cal-pop-link', href: url, target: '_blank', rel: 'noopener noreferrer', text: `Open in ${a ? sourceName(a) : 'browser'}` })));
@@ -3553,9 +3653,14 @@ const CalendarView = (() => {
     if (d.done) {
       foot.appendChild(h('span', { class: 'cal-pop-muted', text: a && a.submitted ? 'Submitted' : 'Done' }));
     } else if (d.task) {
-      foot.appendChild(h('span', { class: 'cal-pop-muted', text: 'On Today’s Tasks' }));
+      const focusing = isFocusingTask(d.task.id);
+      foot.appendChild(h('span', { class: 'cal-pop-muted', text: focusing ? 'You are focusing on this' : 'On Today’s Tasks' }));
       foot.appendChild(h('span', { class: 'cal-spacer' }));
-      foot.appendChild(h('button', { class: 'btn btn-sm btn-primary', type: 'button', onclick: () => startFocus(d.task.id, null) }, icon('play'), 'Start focus'));
+      foot.appendChild(h('button', {
+        class: 'btn btn-sm btn-primary' + (focusing ? ' is-focusing' : ''), type: 'button', disabled: focusing,
+        title: focusing ? 'You are already focusing on this' : 'Start focus',
+        onclick: () => { if (!focusing) startFocus(d.task.id, null); },
+      }, icon(focusing ? 'check' : 'play'), focusing ? 'Focusing on this' : 'Start focus'));
     } else if (a) {
       foot.appendChild(h('span', { class: 'cal-spacer' }));
       foot.appendChild(h('button', {

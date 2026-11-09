@@ -685,7 +685,7 @@ const Guard = (() => {
     if (f) f.focus({ preventScroll: true });
   }
 
-  function renderPopover() { keepFocus(pop, fillPopover); }
+  function renderPopover() { if (pop) keepFocus(pop.el, fillPopover); }
 
   function fillPopover() {
     if (!pop) return;

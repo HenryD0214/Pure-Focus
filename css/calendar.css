@@ -635,7 +635,8 @@
 }
 :root[data-theme="light"] .cal-ev.is-readonly { background: color-mix(in srgb, var(--ev) 9%, #fff); }
 
-.cal-ev.is-past { opacity: 0.6; }
+/* Past events keep their full colour — only "done" fades (H: the calendar stays light). */
+.cal-ev.is-past { opacity: 1; }
 .cal-ev.is-done .cal-ev-name { text-decoration: line-through; text-decoration-color: var(--text-muted); }
 .cal-ev.cont-top { border-top-left-radius: 2px; border-top-right-radius: 2px; }
 .cal-ev.cont-bottom { border-bottom-left-radius: 2px; border-bottom-right-radius: 2px; }
@@ -878,7 +879,7 @@ body.cal-dragging, body.cal-dragging * { cursor: grabbing !important; -webkit-us
 .cal-mpill:hover { background: var(--cal-fill); }
 .cal-mpill.is-allday { background: color-mix(in srgb, var(--ev) 26%, transparent); box-shadow: inset 3px 0 0 var(--ev); font-weight: 620; }
 .cal-mpill.is-allday.is-readonly { background: color-mix(in srgb, var(--ev) 17%, transparent); }
-.cal-mpill.is-past { opacity: 0.6; }
+.cal-mpill.is-past { opacity: 1; }
 .cal-mpill.is-active-ev { box-shadow: 0 0 0 1.5px var(--ev); }
 .cal-mdot { width: 7px; height: 7px; border-radius: 50%; background: var(--ev); flex: none; }
 .cal-mpill.is-readonly .cal-mdot { background: transparent; box-shadow: inset 0 0 0 1.6px var(--ev); }
@@ -937,7 +938,7 @@ body.cal-dragging, body.cal-dragging * { cursor: grabbing !important; -webkit-us
 .cal-ag-row:hover { background: var(--cal-fill); }
 .cal-ag-row:focus-visible { outline: 2px solid var(--focus-tint); outline-offset: -2px; }
 .cal-ag-row.is-active-ev { background: color-mix(in srgb, var(--ev) 14%, transparent); }
-.cal-ag-row.is-past { opacity: 0.55; }
+.cal-ag-row.is-past { opacity: 1; }
 .cal-ag-time { font-size: 12.5px; color: var(--text-secondary); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .cal-ag-bar { width: 4px; align-self: stretch; min-height: 30px; border-radius: 2px; background: var(--ev); }
 .cal-ag-row.is-readonly .cal-ag-bar { background: color-mix(in srgb, var(--ev) 55%, transparent); }
@@ -1638,7 +1639,7 @@ body.reduce-motion .pfa-sheet, body.reduce-motion .pfa-back, body.reduce-motion 
 .cal-ev.is-slim .cal-ev-check { width: 12px; height: 12px; margin-right: 1px; }
 .cal-ev.is-slim .cal-ev-check .cal-i { width: 9px; height: 9px; }
 .cal-ev.is-done { opacity: 0.62; }
-.cal-ev.is-done.is-past { opacity: 0.5; }
+.cal-ev.is-done.is-past { opacity: 0.62; }
 .cal-mpill .cal-ev-check { width: 12px; height: 12px; border-width: 1.5px; }
 .cal-mpill .cal-ev-check .cal-i { width: 9px; height: 9px; }
 .cal-mpill.is-done .cal-mtitle,
@@ -1648,6 +1649,21 @@ body.reduce-motion .pfa-sheet, body.reduce-motion .pfa-back, body.reduce-motion 
 .cal-adpill .cal-ev-check .cal-i { width: 9px; height: 9px; }
 .cal-ag-title .cal-ev-check { width: 18px; height: 18px; border-width: 2px; }
 .cal-ag-title .cal-ev-check .cal-i { width: 12px; height: 12px; }
+.cal-due.has-check { padding-left: 3px; }
+.cal-due .cal-ev-check { width: 12px; height: 12px; border-width: 1.5px; margin-right: 1px; }
+.cal-due .cal-ev-check .cal-i { width: 8px; height: 8px; }
+.cal-pop-done .cal-ev-check { width: 16px; height: 16px; }
+.cal-pop-done .cal-ev-check .cal-i { width: 11px; height: 11px; }
+.cal-ev-check[aria-checked="true"] { color: #fff; }
+
+/* "you are already focusing on this" */
+.cal-ev-play.is-focusing,
+.cal-ev-play:disabled { cursor: default; filter: none; opacity: 0.8; }
+.cal-ev-play.is-focusing:hover,
+.cal-ev-play:disabled:hover { transform: none; filter: none; }
+.btn.is-focusing,
+.btn:disabled.is-focusing { cursor: default; opacity: 0.72; }
+.cal-ag-play.is-focusing { color: var(--text-secondary); }
 
 /* editor: Event | Task */
 .cal-pop-typerow { padding-left: 26px; }
@@ -1787,14 +1803,10 @@ body.reduce-motion .pfa-sheet, body.reduce-motion .pfa-back, body.reduce-motion 
 #view-calendar .cal-col .cal-ev.is-active-ev { box-shadow: 0 0 0 1.5px var(--cal-cut), 0 0 0 3px var(--ev), 0 8px 22px rgba(0, 0, 0, 0.3); }
 #view-calendar .cal-col .cal-ev.is-readonly { background: color-mix(in srgb, var(--ev) 15%, var(--surface-1)); }
 :root[data-theme="light"] #view-calendar .cal-col .cal-ev.is-readonly { background: color-mix(in srgb, var(--ev) 10%, #fff); }
-/* past and done: solid card, quieter colour and text */
-#view-calendar .cal-col .cal-ev.is-past,
+/* done: a solid card, quieter text. Past events keep their normal colour. */
 #view-calendar .cal-col .cal-ev.is-done { opacity: 1; background: color-mix(in srgb, var(--ev) 11%, var(--surface-1)); border-color: color-mix(in srgb, var(--ev) 16%, transparent); }
-:root[data-theme="light"] #view-calendar .cal-col .cal-ev.is-past,
 :root[data-theme="light"] #view-calendar .cal-col .cal-ev.is-done { background: color-mix(in srgb, var(--ev) 8%, #fff); }
-#view-calendar .cal-col .cal-ev.is-past > :not(.cal-ev-resize),
 #view-calendar .cal-col .cal-ev.is-done > :not(.cal-ev-resize) { opacity: 0.62; }
-#view-calendar .cal-col .cal-ev.is-past::before,
 #view-calendar .cal-col .cal-ev.is-done::before { opacity: 0.55; }
 /* the drag preview keeps its own look */
 #view-calendar .cal-col .cal-ev.is-ghost { border: 1.5px solid var(--ev); background: color-mix(in srgb, var(--ev) 34%, var(--surface-1)); box-shadow: 0 0 0 1.5px var(--cal-cut), 0 12px 30px rgba(0, 0, 0, 0.38); }
